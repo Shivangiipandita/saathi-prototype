@@ -1140,13 +1140,20 @@ function sceneIndex(){
   if(sc === 'ddep') return 13;
   return -1;
 }
+// Driver app: bring the driver section of the sidebar into view; Rider app: back to the top.
+function scrollGuide(mode){
+  const g = $('#guide');
+  if(mode !== 'driver'){ g.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  const h = g.querySelector('[data-gsec="Driver app"]'); if(!h) return;
+  g.scrollTo({ top: h.getBoundingClientRect().top - g.getBoundingClientRect().top + g.scrollTop - 10, behavior: 'smooth' });
+}
 function renderGuide(){
   const cur = sceneIndex();
   let html = `<div class="g-head"><div class="g-mark">${I.auto}</div><div><h1>Ola Saathi</h1><div class="sub">Clickable prototype · Mumbai pilot on Metro Line 7</div></div></div>
   <p class="g-intro">Use it like a real app, or jump to any moment below. The rider is <b>Priya</b>, who goes from Dahisar East to MIDC, Andheri East. The driver is <b>Santosh</b> on route R12.</p>
   <div class="modes"><button class="${S.mode === 'rider' ? 'on' : ''}" data-gmode="rider">Rider app</button><button class="${S.mode === 'driver' ? 'on' : ''}" data-gmode="driver">Driver app</button></div>`;
   SCENES.forEach((sc, i) => {
-    if(sc.g) html += (i ? '</div>' : '') + `<h2>${sc.g}</h2><div class="scenes">`;
+    if(sc.g) html += (i ? '</div>' : '') + `<h2 data-gsec="${sc.g}">${sc.g}</h2><div class="scenes">`;
     html += `<button data-gscene="${i}" class="${i === cur ? 'on' : ''}"><span class="n">${i + 1}</span><span>${sc.t}<small>${sc.d}</small></span></button>`;
   });
   html += `</div><div class="g-note"><b>Works for real:</b> every button and toggle, timers, moving maps, snooze and re-booking, re-planning after a traffic jam, the free leg when an auto is late, ratings, "same ride tomorrow" and the driver's code check. <b>Simulated:</b> payments, GPS, notifications, the metro QR, names and numbers.</div>
@@ -1160,7 +1167,7 @@ document.addEventListener('click', e => {
   const gs = e.target.closest('[data-gscene]');
   if(gs){ const sc = SCENES[+gs.dataset.gscene]; sc.f(); $('#guideOverlay').classList.remove('show'); go(sc.s); return; }
   const gm = e.target.closest('[data-gmode]');
-  if(gm){ $('#guideOverlay').classList.remove('show'); go(gm.dataset.gmode === 'driver' ? 'dhome' : 'home'); return; }
+  if(gm){ $('#guideOverlay').classList.remove('show'); go(gm.dataset.gmode === 'driver' ? 'dhome' : 'home'); scrollGuide(gm.dataset.gmode); return; }
   if(e.target.closest('[data-grestart]')){ S = S0(); $('#guideOverlay').classList.remove('show'); go('welcome'); return; }
   const g = e.target.closest('[data-go]');
   if(g){ e.preventDefault(); go(g.dataset.go); return; }
