@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#E6EBE8">
+<title>Ola Saathi Prototype</title>
+<meta name="description" content="Clickable concept prototype of Ola Saathi: set your commute once, and pooled electric autos timed to the metro get you there every day. Made for an APM assignment; not an Ola product.">
+<style>
+:root{
+  --brand:#0E7A5F;--brand-2:#12A07A;--brand-soft:#E3F3EE;--brand-dark:#0A5A46;
+  --ink:#0F1F19;--muted:#5D6B66;--line:#E2E8E5;--bg:#F3F6F4;--card:#FFFFFF;--page:#E6EBE8;
+  --amber:#A35F00;--amber-soft:#FFF3DA;--red:#D3362B;--red-soft:#FDECEA;
+  --metro:#D7263D;--metro-soft:#FDE7EA;--blue:#2563EB;--blue-soft:#E8F0FE;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--page);color:var(--ink);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit}
+svg{flex:none}
+.stage{min-height:100%;display:flex;align-items:center;justify-content:center;gap:40px;padding:20px}
+
+/* ---------- guide ---------- */
+.guide{width:340px;max-height:min(844px,calc(100vh - 40px));overflow:auto;background:#fff;border-radius:20px;padding:20px 20px 16px;box-shadow:0 10px 30px rgba(15,31,25,.08);scrollbar-width:thin}
+.g-head{display:flex;gap:12px;align-items:center}
+.g-mark{width:40px;height:40px;border-radius:12px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.guide h1{font-size:19px;line-height:1.2}
+.guide .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.g-intro{font-size:13px;color:#33433D;line-height:1.45;margin:12px 0}
+.guide h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 6px}
+.modes{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.modes button{flex:1;padding:8px 6px;border-radius:9px;font-size:13.5px;font-weight:650;color:var(--muted);text-align:center}
+.modes button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.scenes{display:flex;flex-direction:column;gap:5px}
+.scenes button{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:8px 10px;border-radius:12px;border:1px solid var(--line);font-size:13.5px;line-height:1.3;font-weight:650}
+.scenes button:hover{background:var(--bg)}
+.scenes button.on{border-color:var(--brand);background:var(--brand-soft)}
+.scenes .n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--muted)}
+.scenes button.on .n{background:var(--brand);color:#fff}
+.scenes small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
+.g-note{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:14px;padding:10px 12px;background:var(--bg);border-radius:12px}
+.g-note b{color:var(--ink)}
+.g-credit{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
+.g-restart{margin-top:8px;font-size:13px;color:var(--brand);font-weight:700}
+.guide-fab{display:none;position:fixed;right:10px;top:max(8px,env(safe-area-inset-top));z-index:60;background:var(--ink);color:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.guide-overlay{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.4);align-items:flex-end}
+.guide-overlay.show{display:flex}
+.guide-overlay .guide{width:100%;max-height:86vh;border-radius:20px 20px 0 0}
+
+/* ---------- device ---------- */
+.device{width:390px;height:min(844px,calc(100vh - 40px));min-height:640px;border-radius:52px;background:#111;padding:10px;box-shadow:0 30px 60px rgba(15,31,25,.25),inset 0 0 0 2px #2a2a2a;flex:none}
+.screen{position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.screen.dark{background:#1C4A3E}
+.statusbar{height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 28px 0 34px;font-size:14px;font-weight:650;position:relative;z-index:12}
+.screen.dark .statusbar{color:#fff}
+.statusbar .notch{position:absolute;left:50%;top:9px;transform:translateX(-50%);width:112px;height:30px;background:#111;border-radius:20px}
+.statusbar .icons{display:flex;gap:6px;align-items:center}
+.view{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.page-wrap{min-height:100%}
+.page-wrap.enter{animation:in .26s ease}
+@keyframes in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.tabbar{flex:none;height:74px;display:flex;border-top:1px solid var(--line);background:#fff;padding:7px 6px 16px}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:650;color:#93A19B}
+.tabbar button.on{color:var(--brand)}
+.tabbar svg{width:22px;height:22px}
+.hidden{display:none!important}
+
+/* ---------- common ---------- */
+.page{padding:4px 18px 28px}
+.top{display:flex;align-items:center;gap:10px;padding:6px 0 12px}
+.top h2{font-size:18px;font-weight:750}
+.stepn{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
+.back{width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.08);flex:none}
+.h1{font-size:24px;line-height:1.2;font-weight:780}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.center{text-align:center}
+.grow{flex:1;min-width:0}
+.ml-auto{margin-left:auto}
+.mt2{margin-top:2px}.mt4{margin-top:4px}.mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.label{font-weight:700;margin:16px 0 8px;font-size:14.5px}
+.card{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 1px 2px rgba(15,31,25,.05);margin-bottom:12px}
+button.card{display:flex;width:100%;text-align:left}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.g6{gap:6px}
+.big{font-size:20px;display:block;line-height:1.25}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 16px;border-radius:14px;background:var(--brand);color:#fff;font-weight:700;font-size:15.5px;text-align:center}
+.btn:active{transform:scale(.99)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:var(--red)}
+.btn.white{background:#fff;color:#0A5A46}
+.btn.glassbtn{background:rgba(255,255,255,.16);color:#fff}
+.btn.sm{padding:10px 12px;font-size:14px;border-radius:12px}
+.btn.auto{width:auto}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn+.btn{margin-top:10px}
+.btns{display:flex;gap:8px}
+.btns .btn{margin-top:0}
+.btn.sticky{position:sticky;bottom:14px;box-shadow:0 8px 20px rgba(14,122,95,.35);z-index:3}
+.link{color:var(--brand);font-weight:700;font-size:13px;margin-top:10px;display:inline-block}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:650;background:var(--bg);color:var(--ink);white-space:nowrap}
+.chip.green{background:var(--brand-soft);color:var(--brand-dark)}
+.chip.amber{background:var(--amber-soft);color:var(--amber)}
+.chip.red{background:var(--red-soft);color:var(--red)}
+.chip.blue{background:var(--blue-soft);color:var(--blue)}
+.chip.metro{background:var(--metro-soft);color:var(--metro)}
+.chip.glass{background:rgba(255,255,255,.18);color:#fff}
+.pill-demo{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:750;color:var(--blue);background:var(--blue-soft);border-radius:999px;padding:5px 9px;flex:none}
+.field{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.field:focus-within{border-color:var(--brand)}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.field input{border:0;outline:0;width:100%;font-size:15px;font-weight:600;background:transparent}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{padding:9px 13px;border-radius:12px;background:#fff;border:1px solid var(--line);font-weight:650;font-size:14px}
+.seg button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.days button{width:40px;height:40px;padding:0;border-radius:50%;text-align:center}
+.toggle{position:relative;display:block;width:46px;height:28px;border-radius:999px;background:#C9D3CE;flex:none;transition:.2s}
+.toggle::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.toggle.on{background:var(--brand)}
+.toggle.on::after{left:21px}
+.pref{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.pref:last-child{border-bottom:0}
+.pref.np{padding-top:0}
+.pref .t{flex:1}
+.pref b{display:block;font-size:14.5px;margin-bottom:2px}
+.pref span{font-size:12.5px;color:var(--muted);line-height:1.35;display:block}
+.steps{display:flex;gap:6px;margin:0 0 12px}
+.steps i{flex:1;height:4px;border-radius:4px;background:#D5DED9}
+.steps i.on{background:var(--brand)}
+.hello{padding:8px 0 12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--brand-soft);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none;font-size:14px}
+.avatar.lg{width:56px;height:56px;font-size:18px}
+.banner{border-radius:16px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.banner svg{margin-top:2px}
+.banner.green{background:var(--brand-soft);color:var(--brand-dark)}
+.banner.amber{background:var(--amber-soft);color:#6E4100}
+.banner.blue{background:var(--blue-soft);color:#173E9C}
+.banner b{display:block}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:14px;border-bottom:1px dashed var(--line)}
+.kv:last-child{border-bottom:0}
+.kv b.r{text-align:right}
+.kv.total{font-weight:800;font-size:15px;border-bottom:0;padding-top:10px}
+.free{color:var(--brand)}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.compare div{border-radius:12px;padding:10px;background:var(--bg);font-size:12px;color:var(--muted)}
+.compare div b{display:block;font-size:15px;color:var(--ink);margin-top:2px}
+.compare div small{display:block;margin-top:2px}
+.compare div.good{background:var(--brand-soft)}
+.radio{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:8px;text-align:left;width:100%;background:#fff}
+.radio.on{border-color:var(--brand);background:#F4FBF8}
+.radio .dot{width:20px;height:20px;border-radius:50%;border:2px solid #B8C5BF;flex:none;margin-top:1px;position:relative}
+.radio.on .dot{border-color:var(--brand)}
+.radio.on .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--brand)}
+.radio b{display:block;font-size:14.5px}
+.radio span span{font-size:12.5px;color:var(--muted);display:block;margin-top:2px;line-height:1.35}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-ic{width:56px;height:56px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--brand)}
+.empty-ic svg{width:26px;height:26px}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.empty p{font-size:13.5px;line-height:1.45}
+
+/* welcome */
+.logo{display:flex;align-items:center;gap:10px}
+.logo .mark{width:44px;height:44px;border-radius:13px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center}
+.logo b{font-size:22px;letter-spacing:-.3px}
+.logo small{display:block;font-size:12px;color:var(--muted);font-weight:650;margin-top:-2px}
+.hero{font-size:29px;margin:30px 0 10px}
+.lead{color:var(--muted);font-size:15px;line-height:1.5}
+.feat{display:flex;gap:12px;align-items:flex-start;padding:7px 0}
+.fi{width:34px;height:34px;border-radius:10px;background:var(--brand-soft);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;flex:none}
+.ft b{display:block;font-size:14.5px}
+.ft span{font-size:12.5px;color:var(--muted)}
+.fine{font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* home cards */
+.hero-card{background:linear-gradient(140deg,#0E7A5F,#0A5A46);color:#fff}
+.hero-card.night{background:linear-gradient(140deg,#24345A,#111C33)}
+.o85{opacity:.85}.o75{opacity:.75}
+.hc-sub{margin-top:12px;font-size:13px;opacity:.85}
+.hc-big{font-size:25px;font-weight:800;margin:2px 0}
+.hc-line{font-size:13px;opacity:.9;line-height:1.4}
+.hc-chain{display:flex;align-items:center;gap:5px;margin-top:10px;font-size:12px;font-weight:700;flex-wrap:wrap}
+.hc-chain span{background:rgba(255,255,255,.14);padding:4px 7px;border-radius:8px}
+.hc-chain i{width:6px;height:2px;background:rgba(255,255,255,.5)}
+.card.demo{align-items:center;gap:12px;border:1.5px dashed #B9CDEB;background:#F7FAFF;box-shadow:none}
+.dm b{display:block;font-size:14px}
+.dm span{font-size:12.5px;color:var(--muted)}
+.ic-ok,.ic-late{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.ic-ok{background:var(--brand-soft);color:var(--brand)}
+.ic-late{background:var(--amber-soft);color:var(--amber)}
+.passcard{background:linear-gradient(140deg,#0F1F19,#16362C);color:#fff}
+.pc-route{font-size:16.5px;display:block;margin-top:2px;line-height:1.35}
+.prof{padding:10px 0 14px}
+.pn{font-size:18px}
+
+/* timeline */
+.tl{position:relative;padding-left:24px}
+.tl::before{content:"";position:absolute;left:8px;top:8px;bottom:12px;width:2px;background:var(--line)}
+.leg{position:relative;padding:3px 0 12px}
+.leg:last-child{padding-bottom:0}
+.leg::before{content:"";position:absolute;left:-21px;top:5px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--brand)}
+.leg.metro::before{border-color:var(--metro)}
+.leg.alert::before{border-color:var(--amber)}
+.leg.end::before{background:var(--brand)}
+.leg .time{font-size:12.5px;font-weight:700;color:var(--muted)}
+.leg b{font-size:14.5px}
+.leg .meta{font-size:12.5px;color:var(--muted)}
+.chain{display:flex;align-items:center;margin-top:10px}
+.chain i{flex:1;height:2px;background:var(--line);margin:0 4px}
+.ch{text-align:center}
+.ch b{display:block;font-size:13.5px}
+.ch span{font-size:11.5px;color:var(--muted)}
+.ch.on b{color:var(--brand)}
+
+/* map */
+.mapbox{position:relative;border-radius:18px;overflow:hidden;background:#EEF2EF;margin-bottom:12px}
+.mapbox svg{display:block;width:100%;height:auto}
+.mapbox .eta{position:absolute;left:12px;top:12px;background:#fff;border-radius:12px;padding:7px 12px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.mapbox .eta b{font-size:20px;display:block;line-height:1.1}
+.mapbox .eta span{font-size:11.5px;color:var(--muted)}
+.mapbox .eta.bl{top:auto;bottom:12px}
+.pref span.pill-demo{display:inline-flex;color:var(--blue);font-size:11px;margin:0 6px 0 0;vertical-align:1px}
+
+/* seats */
+.seats{display:flex;gap:8px;margin-top:12px}
+.seatb{flex:1;border-radius:12px;padding:8px 6px;background:var(--bg);text-align:center;font-size:11.5px;color:var(--muted);line-height:1.25}
+.seatb b{display:block;font-size:13px;color:var(--ink)}
+.seatb.me{background:var(--brand);color:#D8F0E7}
+.seatb.me b{color:#fff}
+.seatb.in{background:var(--brand-soft);color:var(--brand-dark)}
+.seatb.in b{color:var(--brand-dark)}
+.seatb.wait{background:#fff;border:1.5px dashed #B8C5BF}
+.code{font-size:32px;font-weight:800;letter-spacing:8px;text-align:center;padding:8px;background:var(--bg);border-radius:12px;margin:8px 0 10px}
+
+/* rating */
+.stars{display:flex;gap:6px}
+.stars button{font-size:30px;line-height:1;color:#CDD6D1}
+.stars button.on{color:#F2B01E}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tags button{padding:7px 11px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:650;background:#fff}
+.tags button.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-dark)}
+
+/* metro */
+.progress{height:6px;border-radius:6px;background:var(--line);overflow:hidden;margin:10px 0 6px}
+.progress i{display:block;height:100%;width:0;background:var(--brand);border-radius:6px}
+.qr{width:160px;height:160px;margin:6px auto 8px;display:block}
+.ticket{border:1px dashed #E6B3BB;background:#FFF7F8}
+.stations{display:flex;align-items:center;margin:10px 0 4px}
+.stations i{flex:1;height:4px;background:#F2C7CD}
+.stations i.done{background:var(--metro)}
+.stations b{width:10px;height:10px;border-radius:50%;background:#F2C7CD;flex:none}
+.stations b.done{background:var(--metro)}
+
+/* lock + alarm */
+.lock{position:absolute;inset:0;background:linear-gradient(170deg,#1C4A3E 0%,#10261F 60%,#0A1813 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:36px 14px 26px}
+.lk-time{font-size:78px;font-weight:300;letter-spacing:-1px;line-height:1}
+.lk-date{font-size:16px;opacity:.85;margin-top:6px}
+.notifs{width:100%;margin-top:30px;display:flex;flex-direction:column;gap:8px}
+.notif{width:100%;background:rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:12px 14px;text-align:left;color:#fff;animation:drop .45s ease}
+.notif.hot{background:rgba(255,255,255,.25)}
+@keyframes drop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.notif .app{display:flex;align-items:center;gap:8px;font-size:12px;opacity:.85;margin-bottom:5px}
+.notif .app i{width:20px;height:20px;border-radius:6px;background:var(--brand-2);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:800}
+.notif b{font-size:15px;display:block;margin-bottom:2px}
+.notif p{font-size:13.5px;opacity:.92;line-height:1.35}
+.lk-hint{margin-top:auto;font-size:12.5px;opacity:.7}
+.alarm{position:absolute;inset:0;background:linear-gradient(180deg,#1C4A3E,#0C2A22);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 24px 28px}
+.ring{width:148px;height:148px;border-radius:50%;background:rgba(18,160,122,.22);display:flex;align-items:center;justify-content:center;animation:pulse 1.2s ease-in-out infinite;margin-bottom:22px}
+.ring div{width:102px;height:102px;border-radius:50%;background:var(--brand-2);display:flex;align-items:center;justify-content:center;animation:wiggle 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
+.al-time{font-size:54px;font-weight:300;line-height:1}
+.alarm h3{font-size:23px;margin:10px 0 6px}
+.alarm p{opacity:.88;font-size:14.5px;line-height:1.45;margin-bottom:24px;max-width:300px}
+.btn.light{background:#fff;color:#0A5A46}
+.btn.outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45)}
+.al-note{font-size:12px;opacity:.7;margin-top:16px;max-width:280px;line-height:1.4}
+
+/* sheet + toast */
+.sheet-wrap{position:absolute;inset:0;background:rgba(10,20,16,.38);display:none;align-items:flex-end;z-index:20}
+.sheet-wrap.show{display:flex}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:16px 18px 26px;animation:up .25s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet .grab{width:40px;height:5px;border-radius:5px;background:#D5DED9;margin:0 auto 12px}
+.sh-title{font-size:17px;display:block;margin-bottom:4px}
+.sheet p{line-height:1.4}
+.toast{position:absolute;left:14px;right:14px;top:50px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.35;z-index:30;opacity:0;transform:translateY(-10px);transition:.25s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:none}
+
+/* driver */
+.dep{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dep:last-child{border-bottom:0}
+.dep .tm{width:40px;font-weight:800;font-size:14px}
+.dep.done .tm{color:var(--muted)}
+.dots{display:flex;gap:4px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#D5DED9}
+.dots i.on{background:var(--brand)}
+.next{border:1.5px solid var(--brand);background:#F4FBF8}
+.next.ok{border-color:var(--brand);background:var(--brand-soft)}
+.stop{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.stop:last-child{border-bottom:0}
+.stop b{font-size:14px}
+.seat{width:30px;height:30px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}
+.seat.ok{background:var(--brand);color:#fff}
+.seat.warn{background:var(--amber-soft);color:var(--amber)}
+.seat.metro{background:var(--metro-soft);color:var(--metro)}
+.list-item{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:0}
+.codebox{display:flex;gap:10px;justify-content:center;margin:14px 0 6px}
+.codebox span{width:48px;height:56px;border-radius:12px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800}
+.codebox span.f{border-color:var(--brand)}
+.codebox.err span{border-color:var(--red);animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.keypad button{padding:12px 0;border-radius:12px;background:var(--bg);font-size:20px;font-weight:700;text-align:center}
+.keypad button:active{background:var(--line)}
+.earn{font-size:30px;display:block;margin:2px 0}
+.bars{display:flex;align-items:flex-end;gap:8px;height:110px;margin:26px 0 22px}
+.bars div{flex:1;background:var(--brand-soft);border-radius:8px 8px 3px 3px;position:relative}
+.bars div:nth-child(5){background:var(--brand)}
+.bars em{position:absolute;top:-17px;left:-4px;right:-4px;text-align:center;font-size:10.5px;font-style:normal;color:var(--muted)}
+.bars span{position:absolute;bottom:-19px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+
+@media (max-width:820px){
+  .stage{padding:0;gap:0;display:block}
+  .stage>.guide{display:none}
+  .device{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;padding:0;box-shadow:none;background:var(--bg)}
+  .screen{border-radius:0}
+  .statusbar{padding:4px 16px 0 20px;height:42px}
+  .statusbar .notch,.statusbar .icons{display:none}
+  .guide-fab{display:block}
+}
+@media (prefers-reduced-motion:reduce){
+  .ring,.ring div,.page-wrap.enter,.notif,.sheet{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="guide" id="guide" aria-label="Prototype guide"></aside>
+  <div class="device">
+    <div class="screen" id="screen">
+      <div class="statusbar"><span id="sbTime">9:10</span><span class="notch"></span><span class="icons">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="16" height="9" rx="2" fill="currentColor"/><rect x="23.5" y="4" width="2" height="5" rx="1" fill="currentColor" opacity=".5"/></svg>
+      </span></div>
+      <div class="view" id="view"></div>
+      <nav class="tabbar hidden" id="tabbar"></nav>
+      <div class="sheet-wrap" id="sheetWrap"><div class="sheet" id="sheet"></div></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+<button class="guide-fab" id="guideFab">Guide</button>
+<div class="guide-overlay" id="guideOverlay"><aside class="guide" id="guideM" aria-label="Prototype guide"></aside></div>
+
+<script>
+'use strict';
+/* ======================= constants and icons ======================= */
+const BRAND = '#0E7A5F', METRO = '#D7263D', INK = '#0F1F19', BLUE = '#2563EB', FONT = 'Segoe UI,Roboto,Arial,sans-serif';
+const DAYN = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const AUTO_PATH = '<path d="M3 16.5V10c0-2.8 2.2-5 5-5h6.5l3.5 5.5h1.5a1.5 1.5 0 011.5 1.5v4.5"/><path d="M3 16.5h18"/><path d="M12.5 5v5.5h5.5"/>';
+const autoIcon = (size, color) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">${AUTO_PATH}<circle cx="7" cy="17.5" r="2" fill="${color}"/><circle cx="18" cy="17.5" r="2" fill="${color}"/></svg>`;
+const I = {
+  back:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+  trips:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 000-6H9a3 3 0 010-6h6.5"/></svg>',
+  pass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M6 16.5V9a4 4 0 014-4h5.5M18 7.5V15a4 4 0 01-4 4H8.5"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7h14a2 2 0 012 2v9a2 2 0 01-2 2H4z"/><path d="M4 7V6a2 2 0 012-2h10"/><circle cx="16" cy="13.5" r="1.3" fill="currentColor"/></svg>',
+  auto:autoIcon(22, 'currentColor'),
+  shield:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.5M8.2 13.2l7.6 4.5"/></svg>',
+  phone:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg>',
+  bell:'<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 004 0"/></svg>',
+  clock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  battery:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="4" y="9" width="11" height="6" rx="1" fill="currentColor"/><path d="M22 10v4"/></svg>',
+  users:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.8a3.5 3.5 0 010 6.4M18 14.8c1.8.7 3 2.5 3.5 5.2"/></svg>',
+  train:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14"/><path d="M8 21l2-4M16 21l-2-4"/></svg>',
+  moon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></svg>',
+  done:'<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="28" fill="#E3F3EE"/><circle cx="28" cy="28" r="20" fill="#0E7A5F"/><path d="M19 28.5l6 6 12-12.5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  lateBig:'<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="28" fill="#FFF3DA"/><circle cx="28" cy="28" r="20" fill="#B86E00"/><path d="M28 18v11l7 4" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'
+};
+
+/* ======================= state ======================= */
+const S0 = () => ({
+  mode:'rider', screen:'welcome', phase:'sun',
+  prefs:{ womenOnly:true, alarm:true, share:true, arrive:'9:30', days:[1,2,3,4,5,6],
+    home:'Shanti Apartments, Ketkipada, Dahisar East', work:'Akruti Trade Centre, MIDC, Andheri East' },
+  pay:'trip', autopilot:true, skipNext:false,
+  snoozes:0, rebooked:false, late:false, todaySkipped:false, lock:null,
+  rating:0, tags:[], tomorrow:null, credit:0, tripDone:false,
+  eveTime:'9:00', nightArrived:false, nightDone:false, nightRating:0,
+  d:{ stage:1, boarded:{ meena:true, priya:false, anita:false }, car:[150,80], moving:false, done:false, noshow:null, waiting:false, code:'', codeFor:null }
+});
+let S = S0();
+
+/* ======================= helpers ======================= */
+const $ = (s, el = document) => el.querySelector(s);
+const view = $('#view'), screenEl = $('#screen');
+let timers = [];
+function later(fn, ms){ const id = setTimeout(fn, ms); timers.push(['t', id]); return id; }
+function every(fn, ms){ const id = setInterval(fn, ms); timers.push(['i', id]); return id; }
+function clearTimers(){ timers.forEach(([k, id]) => k === 't' ? clearTimeout(id) : k === 'i' ? clearInterval(id) : cancelAnimationFrame(id)); timers = []; }
+function toast(msg, ms = 3000){ const el = $('#toast'); el.innerHTML = msg; el.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), ms); }
+function sheet(html){ $('#sheet').innerHTML = '<div class="grab"></div>' + html; $('#sheetWrap').classList.add('show'); }
+function closeSheet(){ $('#sheetWrap').classList.remove('show'); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const firstPart = s => String(s).split(',')[0];
+function fmt(m){ m = ((m % 1440) + 1440) % 1440; let h = Math.floor(m / 60); const mm = m % 60, ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + String(mm).padStart(2, '0') + ' ' + ap; }
+const hm = m => fmt(m).slice(0, -3);
+const off = () => S.prefs.arrive === '9:00' ? -30 : S.prefs.arrive === '10:00' ? 30 : 0;
+const R = () => S.rebooked ? 8 : 0;                 // next Saathi is timed to the next train, 8 minutes later
+const PL = m => fmt(m + off()), pl = m => hm(m + off());                 // planned times
+const TR = m => fmt(m + off() + R()), tr = m => hm(m + off() + R());     // today's live trip
+const eveShift = () => S.eveTime === '8:45' ? -15 : S.eveTime === '9:15' ? 15 : 0;
+const E = m => fmt(1260 + eveShift() + m);
+const tog = on => `<span class="toggle ${on ? 'on' : ''}"></span>`;
+function nextDay(after){ const ds = [...S.prefs.days].sort((a, b) => a - b); for(const d of ds) if(d > after) return d; return ds.length ? ds[0] + 7 : after + 1; }
+function cday(){ let d = nextDay(0); if(S.skipNext) d = nextDay(d); return d; }
+const dayName = d => DAYN[(d - 1) % 7];
+const dayDate = d => (d + 3) + ' October';
+const dayLabel = d => dayName(d) + ', ' + dayDate(d);
+function daysLabel(){ const ds = [...S.prefs.days].sort((a, b) => a - b), k = ds.join(''); return k === '123456' ? 'Monday to Saturday' : k === '12345' ? 'Monday to Friday' : k === '1234567' ? 'every day' : !k ? 'no days picked' : ds.map(d => DAYS[d - 1]).join(', '); }
+const arrBase = () => 564 + (S.late ? 7 : 0);
+const minsVsTarget = () => arrBase() + R() - 570;
+const banner = (cls, icon, title, body) => `<div class="banner ${cls}">${icon}<div><b>${title}</b>${body}</div></div>`;
+const setBanner = (id, ...a) => { const el = document.getElementById(id); if(el) el.innerHTML = banner(...a); };
+const seat = (cls, a, b) => `<div class="seatb ${cls}"><b>${a}</b>${b}</div>`;
+const coRiders = () => S.prefs.womenOnly ? `<span class="chip green">${I.shield} Women-only ride</span><span class="small muted">Your co-riders are verified women</span>` : `<span class="chip">${I.users} 2 verified co-riders</span>`;
+function setStatus(txt){ $('#sbTime').textContent = txt; }
+
+/* ======================= maps ======================= */
+function baseMap(night){
+  const bg = night ? '#15241F' : '#EEF2EF', blk = night ? '#1E312A' : '#E1E7E3', park = night ? '#1B3A2E' : '#D6EAD9', road = night ? '#2C4139' : '#FFFFFF';
+  const xs = [[10, 70], [104, 72], [200, 56], [280, 70]], ys = [[10, 58], [92, 52], [168, 36]];
+  let b = '';
+  ys.forEach(([y, h]) => xs.forEach(([x, w]) => { b += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${blk}"/>`; }));
+  return `<rect width="360" height="210" fill="${bg}"/>${b}<rect x="104" y="92" width="72" height="52" rx="7" fill="${park}"/>
+  <g stroke="${road}" stroke-width="11" stroke-linecap="round" fill="none"><path d="M-5 80H365"/><path d="M-5 156H365"/><path d="M92 -5V215"/><path d="M188 -5V215"/><path d="M268 -5V215"/></g>`;
+}
+const routeLine = (d, color, dashed) => `<path d="${d}" fill="none" stroke="${color || BRAND}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"${dashed ? ' stroke-dasharray="2 9"' : ''}/>`;
+const carMarker = (x, y, bg) => `<g id="car" transform="translate(${x},${y})"><circle r="16" fill="${bg || BRAND}" stroke="#fff" stroke-width="3"/><svg x="-10" y="-10.5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">${AUTO_PATH}<circle cx="7" cy="17.5" r="2" fill="#fff"/><circle cx="18" cy="17.5" r="2" fill="#fff"/></svg></g>`;
+const metroPin = (x, y) => `<g transform="translate(${x},${y})"><circle r="11" fill="${METRO}" stroke="#fff" stroke-width="3"/><text y="4" font-size="10" font-weight="800" fill="#fff" text-anchor="middle" font-family="${FONT}">M</text></g>`;
+const dotPin = (x, y, color, n) => `<g transform="translate(${x},${y})"><circle r="${n ? 10 : 7}" fill="#fff" stroke="${color}" stroke-width="3.5"/>${n ? `<text y="4" font-size="10" font-weight="800" text-anchor="middle" fill="${color}" font-family="${FONT}">${n}</text>` : ''}</g>`;
+const label = (x, y, txt, color, anchor, halo) => `<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="${color || INK}" text-anchor="${anchor || 'middle'}" font-family="${FONT}" paint-order="stroke" stroke="${halo || '#fff'}" stroke-width="3" stroke-linejoin="round">${txt}</text>`;
+const PTS = {
+  pickup: [[30, 156], [92, 156], [92, 80], [232, 80]],
+  ride: [[60, 80], [188, 80], [188, 156], [330, 156]],
+  last: [[40, 80], [92, 80], [92, 156], [268, 156], [268, 186]],
+  approach: [[340, 80], [40, 80]],
+  night: [[330, 80], [188, 80], [188, 156], [60, 156]],
+  d23: [[150, 80], [268, 80], [268, 118]],
+  d3m: [[268, 118], [268, 156], [330, 156]]
+};
+function mapSVG(kind){
+  let s = '';
+  if(kind === 'pickup'){
+    s = baseMap() + routeLine('M30 156H92V80H232', BRAND, true)
+      + `<circle cx="232" cy="50" r="12" fill="${BLUE}" opacity=".15"><animate attributeName="r" values="9;18;9" dur="2s" repeatCount="indefinite"/></circle><circle cx="232" cy="50" r="6.5" fill="${BLUE}" stroke="#fff" stroke-width="2.5"/>`
+      + label(254, 54, 'You', BLUE, 'start') + dotPin(232, 80, BRAND) + label(232, 106, 'Your gate', '#0A5A46') + label(30, 186, 'From Ketkipada', '#5D6B66', 'start')
+      + carMarker(30, 156);
+  } else if(kind === 'ride'){
+    s = baseMap() + routeLine('M60 80H188V156H330') + dotPin(60, 80, '#93A19B') + label(60, 62, 'Your gate', '#5D6B66')
+      + dotPin(188, 118, BRAND) + label(200, 122, 'Rawalpada', '#0A5A46', 'start')
+      + metroPin(330, 156) + label(350, 188, 'Dahisar (E) Metro', '#8A1F2B', 'end') + carMarker(60, 80);
+  } else if(kind === 'last'){
+    s = baseMap() + (S.late ? routeLine('M340 80H40', '#C77D00', true) : '') + routeLine('M40 80H92V156H268V186')
+      + metroPin(40, 80) + label(14, 62, 'Gundavali, Gate 2', '#8A1F2B', 'start')
+      + `<rect x="258" y="176" width="20" height="20" rx="5" fill="${INK}"/>` + label(286, 190, 'Office', INK, 'start')
+      + carMarker(S.late ? 340 : 40, 80);
+  } else if(kind === 'night'){
+    s = baseMap(true) + routeLine('M330 80H188V156H60', '#12A07A') + metroPin(330, 80) + label(350, 62, 'Dahisar (E)', '#FFC2CA', 'end', '#15241F')
+      + dotPin(60, 156, '#12A07A') + label(60, 188, 'Your gate', '#D8F0E7', 'middle', '#15241F') + carMarker(330, 80, '#12A07A');
+  } else if(kind === 'driver' || kind === 'driverPre'){
+    const pre = kind === 'driverPre', car = pre ? DSTOPS[0].pt : S.d.car;
+    s = baseMap() + routeLine('M40 156H92V80H268V156H330')
+      + DSTOPS.map((st, i) => dotPin(st.pt[0], st.pt[1], pre ? '#93A19B' : S.d.boarded[st.k] ? BRAND : S.d.noshow === st.k ? '#C77D00' : '#93A19B', String(i + 1))).join('')
+      + metroPin(330, 156) + label(350, 188, 'Metro, Gate 1', '#8A1F2B', 'end')
+      + carMarker(car[0], car[1], INK);
+  }
+  return `<svg viewBox="0 0 360 210" role="img" aria-label="Map">${s}</svg>`;
+}
+function along(pts, p){
+  const seg = []; let tot = 0;
+  for(let i = 1; i < pts.length; i++){ const d = Math.hypot(pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]); seg.push(d); tot += d; }
+  let target = p * tot;
+  for(let i = 0; i < seg.length; i++){
+    if(target <= seg[i]){ const r = seg[i] ? target / seg[i] : 0; return [pts[i][0] + (pts[i+1][0] - pts[i][0]) * r, pts[i][1] + (pts[i+1][1] - pts[i][1]) * r]; }
+    target -= seg[i];
+  }
+  return pts[pts.length - 1];
+}
+function animate(pts, ms, onStep, onDone){
+  const el = document.getElementById('car'); if(!el) return;
+  let start = null;
+  const frame = ts => {
+    if(!el.isConnected) return;
+    if(start === null) start = ts;
+    const p = Math.min(1, (ts - start) / ms);
+    const [x, y] = along(pts, p);
+    el.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    if(onStep) onStep(p);
+    if(p < 1) timers.push(['r', requestAnimationFrame(frame)]); else if(onDone) onDone();
+  };
+  timers.push(['r', requestAnimationFrame(frame)]);
+}
+function qr(seed){
+  let s = seed; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const n = 25, c = 160 / n; let r = '';
+  const finder = (x, y) => `<rect x="${x*c}" y="${y*c}" width="${7*c}" height="${7*c}" fill="#111"/><rect x="${(x+1)*c}" y="${(y+1)*c}" width="${5*c}" height="${5*c}" fill="#fff"/><rect x="${(x+2)*c}" y="${(y+2)*c}" width="${3*c}" height="${3*c}" fill="#111"/>`;
+  for(let y = 0; y < n; y++) for(let x = 0; x < n; x++){
+    if((x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9)) continue;
+    if(rnd() > .52) r += `<rect x="${(x*c).toFixed(2)}" y="${(y*c).toFixed(2)}" width="${(c+.2).toFixed(2)}" height="${(c+.2).toFixed(2)}" fill="#111"/>`;
+  }
+  return `<svg class="qr" viewBox="0 0 160 160" aria-label="Ticket QR code (sample)"><rect width="160" height="160" fill="#fff"/>${r}${finder(0,0)}${finder(n-7,0)}${finder(0,n-7)}</svg>`;
+}
+
+/* ======================= rider screens ======================= */
+const screens = {};
+
+screens.welcome = { time:() => '9:10', html:() => `<div class="page">
+  <div class="logo" style="margin-top:22px"><div class="mark">${I.auto}</div><div><b>Saathi</b><small>by Ola</small></div></div>
+  <div class="h1 hero">Set your commute once.<br>Saathi runs it every day.</div>
+  <p class="lead">An electric auto from near your home, timed to your metro and booked for you every morning. One app for the whole trip, and a promise to get you there on time.</p>
+  <div class="card mt16">
+    <div class="feat"><span class="fi">${I.clock}</span><div class="ft"><b>A seat every 5 minutes at peak</b><span>Booked ahead, so you never wait for the auto to fill</span></div></div>
+    <div class="feat"><span class="fi">${I.users}</span><div class="ft"><b>Three riders at most</b><span>Never squeezed. Share only with women if you prefer</span></div></div>
+    <div class="feat"><span class="fi">${I.train}</span><div class="ft"><b>Timed to your train</b><span>If our auto makes you miss it, that leg is free</span></div></div>
+  </div>
+  <button class="btn" data-go="setup1">Set up my commute</button>
+  <button class="btn ghost" data-act="driverMode">I drive an auto</button>
+  <p class="fine">Concept prototype. No real bookings, payments or locations.</p>
+</div>` };
+
+screens.setup1 = { time:() => '9:11', html:() => `<div class="page">
+  <div class="top"><button class="back" aria-label="Back" data-go="welcome">${I.back}</button><h2>Your commute</h2><span class="stepn">1 of 3</span></div>
+  <div class="steps"><i class="on"></i><i></i><i></i></div>
+  <p class="muted small" style="margin-bottom:12px">Tell us once. Saathi plans the whole trip, door to door, and books it for you.</p>
+  <div class="field"><label for="inHome">Home</label><input id="inHome" value="${esc(S.prefs.home)}"></div>
+  <div class="field"><label for="inWork">Work</label><input id="inWork" value="${esc(S.prefs.work)}"></div>
+  <p class="label">Reach work by</p>
+  <div class="seg">${['9:00', '9:30', '10:00'].map(x => `<button class="${S.prefs.arrive === x ? 'on' : ''}" data-act="arrive" data-v="${x}">${x} am</button>`).join('')}</div>
+  <p class="label">On these days</p>
+  <div class="seg days">${['M','T','W','T','F','S','S'].map((d, i) => `<button class="${S.prefs.days.includes(i + 1) ? 'on' : ''}" data-act="day" data-v="${i + 1}" aria-label="${DAYN[i]}">${d}</button>`).join('')}</div>
+  <p class="small muted mt8">Booked ${daysLabel()}. Public holidays are skipped automatically.</p>
+  <div style="height:22px"></div>
+  <button class="btn" data-act="toSetup2">Next</button>
+</div>` };
+
+screens.setup2 = { time:() => '9:11', html:() => `<div class="page">
+  <div class="top"><button class="back" aria-label="Back" data-go="setup1">${I.back}</button><h2>Safety and alerts</h2><span class="stepn">2 of 3</span></div>
+  <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+  <div class="card">
+    <div class="pref"><div class="t"><b>Share rides only with women</b><span>You are matched only with verified women co-riders. Saathi never shows anyone how many women are in a vehicle.</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
+    <div class="pref"><div class="t"><b>Alarm when it's time to leave</b><span>Rings 5 minutes before your Saathi reaches you, based on where it actually is.</span></div><button data-act="pref" data-k="alarm" aria-label="Leave-now alarm">${tog(S.prefs.alarm)}</button></div>
+    <div class="pref"><div class="t"><b>Share every trip with Maa</b><span>+91 98xxx x4521 gets a live link each time you ride.</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
+  </div>
+  ${banner('blue', I.shield, 'On every ride', 'Police-verified, trained drivers. Live tracking, an SOS button and masked phone numbers.')}
+  <button class="btn" data-go="plan">See my plan</button>
+</div>` };
+
+screens.plan = { time:() => '9:12', html:() => `<div class="page">
+  <div class="top"><button class="back" aria-label="Back" data-go="setup2">${I.back}</button><h2>Your daily plan</h2><span class="stepn">3 of 3</span></div>
+  <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+  <div class="card">
+    <div class="row between"><div><div class="small muted">Pick-up to office</div><b class="big">${pl(517)} → ${pl(564)}</b></div><span class="chip green">₹70 · 47 min</span></div>
+    <div class="compare"><div>Your usual way<b>~80 min · ~₹125</b><small>Shared auto, metro, auto</small></div><div class="good">With Saathi<b>47 min · ₹70</b><small>About 33 min and ₹55 less</small></div></div>
+  </div>
+  <div class="card"><div class="tl">
+    <div class="leg alert"><div class="time">${PL(512)}</div><b>Alarm: leave in 5 minutes</b><div class="meta">Set from where your Saathi actually is</div></div>
+    <div class="leg"><div class="time">${PL(517)}</div><b>Saathi auto from your gate</b><div class="meta">To Dahisar (E) Metro · 2.5 km · 9 min · ₹20 · seat held</div></div>
+    <div class="leg metro"><div class="time">${PL(530)}</div><b>Metro Line 7 to Gundavali</b><div class="meta">27 min · ₹30 · QR ticket inside Saathi</div></div>
+    <div class="leg"><div class="time">${PL(558)}</div><b>Saathi auto from Gundavali, Gate 2</b><div class="meta">To your office · 2.4 km · 6 min · ₹20</div></div>
+    <div class="leg end"><div class="time">${PL(564)}</div><b>At your office, 6 min early</b><div class="meta">${esc(S.prefs.work)}</div></div>
+  </div></div>
+  <p class="label">Pay for the whole trip in one place</p>
+  <button class="radio ${S.pay === 'trip' ? 'on' : ''}" data-act="pay" data-v="trip"><span class="dot"></span><span><b>Pay per trip · ₹70</b><span>Both Saathi legs and the metro ticket in one UPI payment</span></span></button>
+  <button class="radio ${S.pay === 'pass' ? 'on' : ''}" data-act="pay" data-v="pass"><span class="dot"></span><span><b>Saathi Pass · ₹1,799 a month</b><span>Every Saathi leg on your route. Metro at the normal fare. Saves about ₹280 a month at 6 days a week.</span></span></button>
+  <div class="card mt8"><div class="pref np"><div class="t"><b>Autopilot</b><span>Book this automatically, ${daysLabel()}. Skip any day with one tap.</span></div><button data-act="autopilotToggle" aria-label="Autopilot">${tog(S.autopilot)}</button></div></div>
+  <button class="btn" data-act="startAutopilot">${S.autopilot ? 'Start autopilot' : 'Book ' + dayName(nextDay(0)) + ' only'}</button>
+</div>` };
+
+function homeSun(){
+  const d = cday(), first = nextDay(0);
+  return `<div class="page">
+  <div class="row between hello"><div><div class="muted small">Sunday, 3 October</div><div class="h1">Good evening, Priya</div></div><button class="avatar" data-go="profile" aria-label="Profile">PS</button></div>
+  <div class="card hero-card">
+    <div class="row between"><span class="chip glass">${S.autopilot ? I.check + ' Autopilot on' : 'Booked once'}</span><span class="small o85">${S.autopilot ? daysLabel() : ''}</span></div>
+    ${S.skipNext ? `<div class="hc-sub">${dayName(first)} skipped. Next commute:</div>` : ''}
+    <div class="hc-sub" ${S.skipNext ? 'style="margin-top:2px"' : ''}>${d === 1 ? 'Tomorrow' : dayName(d)}, ${dayDate(d)}</div>
+    <div class="hc-big">Pick-up at ${PL(517)}</div>
+    <div class="hc-line">From your gate. Alarm at ${pl(512)}, office by ${pl(564)}.</div>
+    <div class="hc-chain"><span>Saathi ${pl(517)}</span><i></i><span>Metro ${pl(530)}</span><i></i><span>Saathi ${pl(558)}</span><i></i><span>Office ${pl(564)}</span></div>
+    <div class="btns mt12">
+      ${S.skipNext ? `<button class="btn sm white" data-act="undoSkip">Undo skip</button>` : `<button class="btn sm white" data-act="skipNext">Skip ${dayName(d)}</button>`}
+      <button class="btn sm glassbtn" data-act="changeTime">Change time</button>
+    </div>
+  </div>
+  <button class="card demo" data-act="morning"><span class="pill-demo">${I.clock} Demo</span><span class="dm"><b>Fast-forward to ${dayName(d)}, ${PL(511)}</b><span>See the alarm and the whole commute</span></span></button>
+  <div class="card"><b>Your first Saathi commute is ${d === 1 ? 'tomorrow' : 'on ' + dayName(d)}</b><div class="small muted mt4">We ring about 5 minutes before your Saathi reaches your gate, so you are not waiting outside in the heat or the rain.</div></div>
+  <div class="card"><b>Ride home</b><div class="small muted mt4">A seat is held on the ${S.eveTime} pm Saathi from your office gate. You can change it any time during the day.</div></div>
+</div>`;
+}
+function homeMon(){
+  const d = cday(), diff = minsVsTarget();
+  let top;
+  if(S.nightDone) top = `<div class="card row"><span class="ic-ok">${I.check}</span><div><b>Home at ${E(48)}</b><div class="small muted">${S.prefs.share ? 'We told Maa you reached home.' : 'Have a good night.'}</div></div></div>`;
+  else if(S.todaySkipped) top = `<div class="card"><b>You skipped today's commute</b><div class="small muted mt4">Your seats went to other riders. No charge.</div></div>` + eveCard();
+  else top = `<div class="card row">${diff <= 0 ? `<span class="ic-ok">${I.check}</span>` : `<span class="ic-late">${I.clock}</span>`}<div><b>Reached office at ${TR(arrBase())}</b><div class="small muted">${diff <= 0 ? 'On time, ' + (-diff) + ' min early' : diff + ' min late' + (S.late ? '. The late leg was free.' : '')}</div></div></div>` + eveCard();
+  return `<div class="page">
+  <div class="row between hello"><div><div class="muted small">${dayLabel(d)}</div><div class="h1">${S.nightDone ? 'Good night, Priya' : 'Good morning, Priya'}</div></div><button class="avatar" data-go="profile" aria-label="Profile">PS</button></div>
+  ${top}
+  ${tomorrowMini()}
+</div>`;
+}
+function eveCard(){
+  return `<div class="card hero-card night">
+    <div class="row between"><span class="chip glass">${I.moon} Ride home tonight</span>${S.prefs.womenOnly ? `<span class="chip glass">${I.shield} Women-only</span>` : ''}</div>
+    <div class="hc-big mt8">${S.eveTime} pm from your office</div>
+    <div class="hc-line">Saathi to Gundavali, Metro Line 7, then Saathi to your gate. Home by ${E(48)}.</div>
+    <div class="btns mt12"><button class="btn sm white" data-go="evening">View or change</button></div>
+  </div>
+  <button class="card demo" data-act="toEvening"><span class="pill-demo">${I.clock} Demo</span><span class="dm"><b>Fast-forward to ${E(-5)}</b><span>Ride home at night</span></span></button>`;
+}
+function tomorrowMini(){
+  const d = cday(), nd = nextDay(d), when = nd === d + 1 ? 'Tomorrow' : dayName(nd);
+  if(S.tomorrow === 'no') return `<div class="card"><div class="row between"><div><b>${when}: skipped</b><div class="small muted">${S.autopilot ? 'Autopilot books again from ' + dayName(nextDay(nd)) + '.' : 'Not booked.'}</div></div><button class="chip" data-act="tomorrow" data-v="yes">Undo</button></div></div>`;
+  if(!S.autopilot && S.tomorrow !== 'yes') return `<div class="card"><div class="row between"><div><b>${when}: not booked yet</b><div class="small muted">Book the same ride in one tap</div></div><button class="chip green" data-act="tomorrow" data-v="yes">Book</button></div></div>`;
+  return `<div class="card"><div class="row between"><div><b>${when}, ${dayDate(nd)}</b><div class="small muted">Pick-up ${PL(517)}, alarm at ${pl(512)}</div></div><span class="chip green">${I.check} ${S.autopilot ? 'Autopilot' : 'Booked'}</span></div></div>`;
+}
+screens.home = { tab:'home', time:() => S.phase === 'sun' ? '9:13' : S.nightDone ? hm(1309 + eveShift()) : tr(566), html:() => S.phase === 'sun' ? homeSun() : homeMon() };
+
+function lockMorning(){
+  return { abs:511, next: S.prefs.alarm ? 'alarm' : 'notify', notes:[{ when:PL(500), title:'Your commute is on for today', body:`Pick-up ${PL(517)} at your gate, seat 2. Train at ${PL(530)}. Office by ${PL(564)}.` }] };
+}
+screens.lock = { dark:true, time:() => hm(S.lock.abs + off()), html:() => `<div class="lock">
+  <div class="lk-time">${hm(S.lock.abs + off())}</div>
+  <div class="lk-date">${dayLabel(cday())}</div>
+  <div class="notifs">${S.lock.notes.map(n => `<button class="notif ${n.hot ? 'hot' : ''}" data-act="openLive"><div class="app"><i>S</i> Saathi · ${n.when}</div><b>${n.title}</b><p>${n.body}</p></button>`).join('')}</div>
+  <div class="lk-hint">Tap a notification to open Saathi</div>
+</div>`, after(){
+  const L = S.lock;
+  if(L.next === 'alarm') later(() => go('alarm'), L.delay || 2600);
+  else if(L.next === 'notify') later(() => { L.abs = 512; L.next = null; L.notes.unshift({ when:'now', hot:true, title:'Leave in 5 minutes', body:`Your Saathi reaches your gate at ${TR(517)}. Leave now and you reach office by ${TR(564)}.` }); paint(screens.lock, false); }, 2600);
+} };
+
+screens.alarm = { dark:true, time:() => tr(512 + 2 * S.snoozes), html:() => `<div class="alarm">
+  <div class="ring"><div>${I.bell}</div></div>
+  <div class="al-time">${tr(512 + 2 * S.snoozes)}</div>
+  <h3>Leave in ${5 - 2 * S.snoozes} minutes</h3>
+  <p>Your Saathi reaches your gate at ${TR(517)}. Start now and you'll reach office by ${TR(564)}.</p>
+  <button class="btn light" data-act="leaving">I'm leaving</button>
+  ${S.rebooked ? `<button class="btn outline" data-act="skipToday">Skip today</button>` : `<button class="btn outline" data-act="snooze">${S.snoozes ? 'Snooze again' : 'Snooze 2 min'}</button>`}
+  <div class="al-note">Your Saathi waits 1 minute at your gate. After that the seat goes to the next rider.</div>
+</div>` };
+
+const onTimeLine = () => minsVsTarget() <= 0 || S.late ? `On track: office by ${TR(564)}` : `Office by ${TR(564)}, ${564 + R() - 570} min after ${S.prefs.arrive}`;
+function miniChain(active){ return `<div class="chain">${[['Saathi', tr(517)], ['Metro', tr(530)], ['Saathi', tr(558)], ['Office', tr(564)]].map(([a, b], i) => `<div class="ch ${i === active ? 'on' : ''}"><b>${b}</b><span>${a}</span></div>`).join('<i></i>')}</div>`; }
+
+screens.live = { time:() => tr(513), html:() => `<div class="page">
+  <div class="top"><h2 id="liveTitle">${S.rebooked ? 'Your new Saathi is coming' : 'Your Saathi is coming'}</h2></div>
+  <div class="mapbox">${mapSVG('pickup')}<div class="eta"><b id="eta">4 min</b><span id="etaSub">to your gate</span></div></div>
+  <div id="liveBanner">${banner('green', I.check, onTimeLine(), `Be at your gate by ${TR(517)}. Your seat is held.`)}</div>
+  <div class="card hidden" id="hereCard"><b>Show this code to Santosh</b><div class="small muted">It confirms you're getting into the right auto</div><div class="code">4821</div><button class="btn" data-act="boarded">I've boarded</button></div>
+  <div class="card">
+    <div class="row"><div class="avatar">SP</div><div class="grow"><b>Santosh Patil</b> <span class="small muted">· 4.9 ★ · police verified</span><div class="small muted">Electric auto · MH 47 AR 2210 · Route R12</div></div></div>
+    <div class="seats">${seat('in', 'Seat 1', 'On board')}${seat('me', 'Seat 2', 'You')}${seat('wait', 'Seat 3', 'Next stop')}</div>
+    <div class="row wrap mt10">${coRiders()}</div>
+    <div class="btns mt12"><button class="btn sm ghost" data-act="shareTrip">${I.share} Share</button><button class="btn sm ghost" data-act="call">${I.phone} Call</button><button class="btn sm red" data-act="sos">SOS</button></div>
+  </div>
+  <div class="card"><b>Today's trip</b>${miniChain(0)}</div>
+</div>`, after(){
+  [[3500, 514, '3 min'], [7000, 515, '2 min'], [10500, 516, '1 min']].forEach(([ms, m, l]) => later(() => {
+    setStatus(tr(m)); const e = $('#eta'); if(e) e.textContent = l;
+    if(l === '1 min') setBanner('liveBanner', 'amber', I.clock, 'Step out now', 'Your Saathi is 1 minute away and waits 1 minute at your gate.');
+  }, ms));
+  animate(PTS.pickup, 14000, null, () => {
+    setStatus(tr(517)); $('#eta').textContent = 'Here'; $('#etaSub').textContent = 'at your gate'; $('#liveTitle').textContent = 'Your Saathi is here';
+    setBanner('liveBanner', 'green', I.check, 'Your Saathi is at your gate', 'Santosh is waiting. Seat 2 is yours.');
+    $('#hereCard').classList.remove('hidden');
+  });
+} };
+
+screens.ride = { time:() => tr(518), html:() => `<div class="page">
+  <div class="top"><h2>On the way to the metro</h2></div>
+  <div class="mapbox">${mapSVG('ride')}<div class="eta bl"><b id="eta">${tr(526)}</b><span>at Dahisar (E) Metro</span></div></div>
+  <div class="card"><div class="row between"><b>Metro Line 7 at ${TR(530)}</b><span class="chip green">4 min to spare</span></div>
+    <div class="small muted mt4">Platform 1 towards Gundavali. If this auto makes you miss the train, the leg is free.</div>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="row between small muted"><span>Your gate</span><span>Rawalpada</span><span>Metro</span></div></div>
+  <div class="card">
+    <div class="seats" id="seats">${seat('in', 'Seat 1', 'On board')}${seat('me', 'Seat 2', 'You')}${seat('wait', 'Seat 3', 'Rawalpada')}</div>
+    <div class="row wrap mt10">${coRiders()}</div>
+    ${S.prefs.share ? `<div class="row g6 small muted mt8">${I.share} Maa can see this trip live</div>` : ''}
+    <div class="btns mt12"><button class="btn sm ghost" data-act="shareTrip">${I.share} Share</button><button class="btn sm red" data-act="sos">SOS</button></div>
+  </div>
+  <button class="btn sticky hidden" id="toMetro" data-go="metro">Open my metro ticket</button>
+</div>`, after(){
+  let third = false;
+  animate(PTS.ride, 12000, p => {
+    $('#prog').style.width = (p * 100) + '%';
+    setStatus(tr(518 + Math.round(p * 8)));
+    if(!third && p > .48){ third = true; $('#seats').innerHTML = seat('in', 'Seat 1', 'On board') + seat('me', 'Seat 2', 'You') + seat('in', 'Seat 3', 'On board'); toast('Third rider picked up at Rawalpada. All 3 seats are full.'); }
+  }, () => { $('#eta').textContent = 'Arrived'; $('#toMetro').classList.remove('hidden'); toast(`You're at Dahisar (E) Metro at ${TR(526)}. Your train leaves in 4 minutes.`); });
+} };
+
+const STATIONS = ['Dahisar (E)', 'Ovaripada', 'Rashtriya Udyan', 'Devipada', 'Magathane', 'Poisar', 'Akurli', 'Kurar', 'Dindoshi', 'Aarey', 'Goregaon (E)', 'Jogeshwari (E)', 'Mogra', 'Gundavali'];
+function lmCard(){
+  return `<div class="row between"><b>Your last-mile Saathi</b>${S.late ? '<span class="chip amber">7 min late</span>' : '<span class="chip green">Seat held</span>'}</div>
+  <div class="small muted mt4">${S.late ? `Running 7 minutes late because of a jam on the highway, so this leg is now free.${S.pay === 'pass' ? ' ₹20 goes back on your pass.' : ''}` :`Imran is waiting at Gundavali, Gate 2 from ${TR(557)}. Route R7 to your office.`}</div>
+  <div class="pref np mt12" style="border-top:1px solid var(--line);padding-top:12px"><div class="t"><b><span class="pill-demo">Demo</span> Make this auto run late</b><span>See the on-time promise at work</span></div><button data-act="lateToggle" aria-label="Make the auto late">${tog(S.late)}</button></div>`;
+}
+screens.metro = { time:() => tr(527), html:() => `<div class="page">
+  <div class="top"><h2>Metro Line 7</h2><span class="chip metro ml-auto">On time</span></div>
+  <div class="card ticket center"><div class="small muted">Scan at the gate</div>${qr(4821)}
+    <b>Dahisar (E) → Gundavali</b><div class="small muted">Single journey · ₹30 · bought inside Saathi</div></div>
+  <div class="card"><div class="row between"><b id="stn">Dahisar (E)</b><span class="small muted" id="stnTime">${TR(530)}</span></div>
+    <div class="stations" id="stations">${STATIONS.map((_, i) => (i ? '<i></i>' : '') + '<b></b>').join('')}</div>
+    <div class="small muted">13 stops · reaches Gundavali at ${TR(557)}</div></div>
+  <div class="card" id="lmCard">${lmCard()}</div>
+  <button class="btn sticky" id="toLast" disabled data-go="lastmile">Reached Gundavali</button>
+</div>`, after(){
+  let i = 0; const st = $('#stations');
+  const tick = () => {
+    st.querySelectorAll('b').forEach((b, k) => b.classList.toggle('done', k <= i));
+    st.querySelectorAll('i').forEach((x, k) => x.classList.toggle('done', k < i));
+    const m = 530 + Math.round(i * 27 / 13);
+    $('#stn').textContent = STATIONS[i]; $('#stnTime').textContent = TR(m); setStatus(tr(m));
+    if(i === STATIONS.length - 1){ $('#toLast').disabled = false; toast(`Gundavali next. ${S.late ? 'Your last-mile auto is 7 min late, so that leg is free.' : 'Your Saathi is waiting at Gate 2.'}`); }
+    i++;
+  };
+  later(() => { tick(); every(() => { if(i < STATIONS.length) tick(); }, 850); }, 600);
+} };
+
+screens.lastmile = { time:() => tr(557), html:() => `<div class="page">
+  <div class="top"><h2>Last mile</h2></div>
+  <div id="lmBanner">${S.late ? banner('amber', I.clock, 'Your Saathi is 7 minutes late', `Sorry. This leg is free${S.pay === 'pass' ? ' and ₹20 goes back on your pass' : ''}. Imran reaches Gate 2 at ${TR(565)}.`) : banner('green', I.check, 'Your Saathi is at Gate 2', 'Walk out of Gate 2. Imran is waiting and seat 1 is yours.')}</div>
+  <div class="mapbox">${mapSVG('last')}<div class="eta bl"><b id="eta">${tr(arrBase())}</b><span>at your office</span></div></div>
+  <div class="card ${S.late ? 'hidden' : ''}" id="codeCard"><b>Show this code to Imran</b><div class="code">4821</div><button class="btn" id="rideLast" data-act="rideLast">I've boarded</button></div>
+  <div class="card">
+    <div class="row"><div class="avatar">IK</div><div class="grow"><b>Imran Khan</b> <span class="small muted">· 4.8 ★ · police verified</span><div class="small muted">Electric auto · MH 02 FK 7731 · Route R7</div></div></div>
+    <div class="seats">${seat('me', 'Seat 1', 'You')}${seat('in', 'Seat 2', 'Same train')}${seat('in', 'Seat 3', 'Same train')}</div>
+    <div class="row wrap mt10">${coRiders()}</div>
+  </div>
+</div>`, after(){
+  if(S.late) animate(PTS.approach, 6000, p => setStatus(tr(557 + Math.round(p * 8))), () => {
+    setBanner('lmBanner', 'green', I.check, 'Your Saathi is here', 'This leg is free. Show your code to Imran.');
+    $('#codeCard').classList.remove('hidden');
+  });
+} };
+
+function paidToday(){ return S.pay === 'pass' ? 30 : 30 + 20 + (S.late ? 0 : 20); }
+function tomorrowHTML(){
+  const d = cday(), nd = nextDay(d), when = nd === d + 1 ? 'tomorrow' : 'on ' + dayName(nd), date = dayName(nd) + ' ' + dayDate(nd);
+  if(S.tomorrow === 'yes') return `<div class="row g6" style="color:var(--brand-dark)">${I.check}<b>Booked for ${date}</b></div><div class="small muted mt4">Same route. We'll ring at ${PL(512)} and your Saathi reaches your gate at ${PL(517)}.</div>${S.autopilot ? '' : `<button class="btn ghost mt10" data-act="autopilotOn">Book it every day with autopilot</button>`}`;
+  if(S.tomorrow === 'no') return `<b>${date}: skipped</b><div class="small muted mt4">${S.autopilot ? 'Your seats went to other riders. Autopilot books again from ' + dayName(nextDay(nd)) + '.' : 'Nothing is booked.'}</div><button class="link" data-act="tomorrow" data-v="yes">Undo</button>`;
+  return `<b>Same ride ${when}?</b><div class="small muted mt4">${date} · pick-up ${PL(517)} · office by ${PL(564)}${S.autopilot ? '. Autopilot is already holding your seats.' : ''}</div>
+  <div class="btns mt10"><button class="btn" data-act="tomorrow" data-v="yes">${S.autopilot ? 'Yes, keep it' : 'Yes, book it'}</button><button class="btn ghost" data-act="tomorrow" data-v="no">${S.autopilot ? 'No, skip it' : 'No'}</button></div>`;
+}
+screens.summary = { time:() => tr(arrBase() + 1), html:() => {
+  const diff = minsVsTarget(), door = arrBase() - 517, pass = S.pay === 'pass', worth = 30 + 20 + (S.late ? 0 : 20);
+  const sub = S.late ? `${diff > 0 ? diff + ' min after ' + S.prefs.arrive + ' am. ' : ''}Your last-mile auto was late, so that leg is free.`
+    : S.rebooked ? `${diff} min after ${S.prefs.arrive} am, because you took the next Saathi.` : `${-diff} min before ${S.prefs.arrive} am. Door to door in ${door} minutes.`;
+  const legRow = (lbl, free) => `<div class="kv"><span>${lbl}</span><span>${free ? '<s>₹20</s> <b class="free">Free</b>' : pass ? 'On pass' : '₹20'}</span></div>`;
+  return `<div class="page">
+  <div class="top"><h2>Trip complete</h2></div>
+  <div class="card center">${diff <= 0 ? I.done : I.lateBig}<div class="h1 mt8" style="font-size:22px">Reached office at ${TR(arrBase())}</div><div class="small muted mt4">${sub}</div></div>
+  <div class="card"><b>What you paid</b>
+    ${legRow('Saathi auto · ' + TR(517))}
+    <div class="kv"><span>Metro Line 7 · Dahisar (E) to Gundavali</span><span>₹30</span></div>
+    ${legRow('Saathi auto · ' + TR(S.late ? 565 : 558), S.late)}
+    <div class="kv total"><span>${pass ? 'Paid today' : 'Total, one UPI payment'}</span><span>₹${paidToday()}</span></div>
+    ${S.late ? `<span class="chip green mt8">${I.check} ${pass ? '₹20 credit added to your pass' : 'The late leg was not charged'}</span>` : ''}
+    <div class="compare"><div>Your usual way<b>~80 min · ~₹125</b></div><div class="good">Today with Saathi<b>${door} min · ₹${worth}</b></div></div>
+  </div>
+  <div class="card"><b>How was your commute?</b><div class="stars mt8">${[1, 2, 3, 4, 5].map(n => `<button class="${S.rating >= n ? 'on' : ''}" data-act="rate" data-v="${n}" aria-label="${n} stars">★</button>`).join('')}</div>
+    <div class="tags">${['On time', 'Felt safe', 'Clean auto', 'Polite driver', 'Easy pick-up'].map(x => `<button class="${S.tags.includes(x) ? 'on' : ''}" data-act="tag" data-v="${x}">${x}</button>`).join('')}</div></div>
+  <div class="card" id="tomorrowCard">${tomorrowHTML()}</div>
+  <button class="btn ghost" data-act="summaryDone">Done</button>
+</div>`; } };
+
+screens.evening = { time:() => hm(1255 + eveShift()), html:() => `<div class="page">
+  <div class="top"><button class="back" aria-label="Back" data-go="home">${I.back}</button><h2>Ride home tonight</h2></div>
+  ${banner('green', I.clock, 'Leave your desk in 5 minutes', `Your Saathi reaches your office gate at ${E(0)}.`)}
+  <div class="card"><b>Leaving office at</b>
+    <div class="seg mt8">${['8:45', '9:00', '9:15'].map(x => `<button class="${S.eveTime === x ? 'on' : ''}" data-act="eveTime" data-v="${x}">${x} pm</button>`).join('')}</div>
+    <div class="tl mt16">
+      <div class="leg"><div class="time">${E(0)}</div><b>Saathi auto to Gundavali Metro</b><div class="meta">From your office gate · ₹20</div></div>
+      <div class="leg metro"><div class="time">${E(10)}</div><b>Metro Line 7 to Dahisar (E)</b><div class="meta">27 min · ₹30</div></div>
+      <div class="leg"><div class="time">${E(39)}</div><b>Saathi auto to your gate</b><div class="meta">Waits for your train at Gate 1 · ₹20</div></div>
+      <div class="leg end"><div class="time">${E(48)}</div><b>Home</b><div class="meta">Dropped at your gate, not the main road</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="pref np"><div class="t"><b>Women-only ride</b><span>Only verified women co-riders on both Saathi legs</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only ride">${tog(S.prefs.womenOnly)}</button></div>
+    <div class="pref"><div class="t"><b>Share live trip with Maa</b><span>She can see where you are until you reach home</span></div><button data-act="pref" data-k="share" aria-label="Share trip">${tog(S.prefs.share)}</button></div>
+  </div>
+  <button class="btn" data-act="startNight">I'm leaving now</button>
+</div>` };
+
+function nightEnd(){
+  return `<div class="card"><b>Rate tonight's ride</b><div class="stars mt8">${[1, 2, 3, 4, 5].map(n => `<button class="${S.nightRating >= n ? 'on' : ''}" data-act="nightRate" data-v="${n}" aria-label="${n} stars">★</button>`).join('')}</div></div>
+  <button class="btn" data-act="nightDone">Done</button>`;
+}
+screens.night = { time:() => hm(1299 + eveShift()), html:() => `<div class="page">
+  <div class="top"><h2 id="nightTitle">Almost home</h2>${S.prefs.womenOnly ? `<span class="chip green ml-auto">${I.shield} Women-only</span>` : ''}</div>
+  <div class="mapbox">${mapSVG('night')}<div class="eta"><b id="eta">${hm(1308 + eveShift())}</b><span>at your gate</span></div></div>
+  <div id="nightBanner">${S.prefs.share ? banner('blue', I.share, 'Maa is following your trip live', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`) : banner('green', I.check, 'On your way home', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`)}</div>
+  <div class="card">
+    <div class="row"><div class="avatar">RM</div><div class="grow"><b>Rakesh More</b> <span class="small muted">· 4.8 ★ · police verified</span><div class="small muted">Electric auto · MH 47 AS 0912 · Route R12</div></div></div>
+    <div class="seats">${seat('in', 'Seat 1', 'Drops first')}${seat('me', 'Seat 2', 'You')}${seat('in', 'Seat 3', 'Drops last')}</div>
+    <div class="small muted mt10">${S.prefs.womenOnly ? 'Both co-riders are verified women. ' : ''}You are the second drop, at your gate.</div>
+    <div class="btns mt12"><button class="btn sm ghost" data-act="shareTrip">${I.share} Share</button><button class="btn sm ghost" data-act="call">${I.phone} Call</button><button class="btn sm red" data-act="sos">SOS</button></div>
+  </div>
+  <div id="nightEnd">${S.nightArrived ? nightEnd() : ''}</div>
+</div>`, after(){
+  if(S.nightArrived) return;
+  animate(PTS.night, 9000, p => setStatus(hm(1299 + eveShift() + Math.round(p * 9))), () => {
+    S.nightArrived = true;
+    $('#nightTitle').textContent = "You're home";
+    $('#eta').textContent = 'Home';
+    setBanner('nightBanner', 'green', I.check, `Home at ${E(48)}`, S.prefs.share ? 'We told Maa you reached home safely.' : 'Have a good night.');
+    $('#nightEnd').innerHTML = nightEnd();
+  });
+} };
+
+screens.trips = { tab:'trips', time:() => tabTime(), html:() => {
+  const rows = [], d = dayName(cday()).slice(0, 3) + ' ' + dayDate(cday()).replace(' October', ' Oct');
+  if(S.nightDone) rows.push([d, 'Office to home', (S.prefs.womenOnly ? 'Women-only · ' : '') + 'home ' + E(48), S.pay === 'pass' ? 30 : 70, false]);
+  if(S.tripDone && !S.todaySkipped){ const diff = minsVsTarget(); rows.push([d, 'Home to office', diff <= 0 ? 'On time · ' + TR(arrBase()) : S.late ? 'Auto late · leg not charged' : diff + ' min late', paidToday(), diff > 0]); }
+  return `<div class="page"><div class="top"><h2>Your trips</h2></div>
+  ${rows.length ? `<div class="card">${rows.map(r => `<div class="list-item"><div class="seat ${r[4] ? 'warn' : 'ok'}">${r[4] ? '!' : '✓'}</div><div class="grow"><b style="font-size:14px">${r[1]}</b><div class="small muted">${r[0]} · ${r[2]}</div></div><b>₹${r[3]}</b></div>`).join('')}</div>${S.pay === 'pass' ? '<p class="small muted">Saathi legs are on your pass. Amounts are what you paid that day.</p>' : ''}`
+  : `<div class="empty"><div class="empty-ic">${I.trips}</div><b>No trips yet</b><p>Your first Saathi commute is on ${dayName(cday())}. Try the demo on the Home tab.</p></div>`}
+</div>`; } };
+
+screens.pass = { tab:'pass', time:() => tabTime(), html:() => S.pay === 'pass' ? `<div class="page"><div class="top"><h2>Saathi Pass</h2></div>
+  <div class="card passcard"><div class="small o75">Your route</div><b class="pc-route">Ketkipada ⇄ Dahisar (E) Metro<br>Gundavali ⇄ MIDC, Andheri East</b>
+    <div class="row between mt16"><div><div class="small o75">Valid till</div><b>2 November</b></div><div><div class="small o75">Price</div><b>₹1,799 a month</b></div></div></div>
+  <div class="card"><div class="kv"><span>Saathi legs on your route</span><b>Included, any time</b></div><div class="kv"><span>Metro and bus tickets</span><b>Normal fare</b></div><div class="kv"><span>Surge pricing</span><b>Never</b></div><div class="kv"><span>Credit from late legs</span><b>₹${S.credit}</b></div></div>
+  <button class="btn ghost" data-act="payTrip">Switch to pay per trip</button></div>`
+  : `<div class="page"><div class="top"><h2>Pay and pass</h2></div>
+  <div class="card"><b>You pay per trip</b><div class="small muted mt4">₹20 for each Saathi leg plus the metro fare, in one UPI payment per trip.</div>
+    <div class="small muted mt8">If a Saathi auto makes you late, that leg is not charged. Nothing to claim.</div></div>
+  <div class="card passcard"><div class="small o75">Saathi Pass</div><b class="pc-route">₹1,799 a month for every Saathi leg on your route</b>
+    <div class="small o85 mt8">Paying per trip 6 days a week comes to about ₹2,080 a month for the Saathi legs. The pass saves about ₹280, with no surge ever.</div>
+    <button class="btn white mt12" data-act="payPass">Switch to Saathi Pass</button></div>
+</div>` };
+
+screens.profile = { tab:'profile', time:() => tabTime(), html:() => `<div class="page">
+  <div class="row prof"><div class="avatar lg">PS</div><div><b class="pn">Priya Sharma</b><div class="small muted">Dahisar East, Mumbai</div></div></div>
+  <div class="card"><div class="row between"><b>My commute</b><button class="chip" data-go="setup1">Edit</button></div>
+    <div class="kv mt4"><span>Home</span><b class="r">${esc(firstPart(S.prefs.home))}</b></div>
+    <div class="kv"><span>Work</span><b class="r">${esc(firstPart(S.prefs.work))}</b></div>
+    <div class="kv"><span>Reach by</span><b>${S.prefs.arrive} am</b></div>
+    <div class="kv"><span>Days</span><b class="r">${daysLabel()}</b></div></div>
+  <div class="card">
+    <div class="pref np"><div class="t"><b>Women-only rides</b><span>Match me only with verified women co-riders</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
+    <div class="pref"><div class="t"><b>Leave-now alarm</b><span>Rings 5 minutes before my Saathi reaches me</span></div><button data-act="pref" data-k="alarm" aria-label="Leave-now alarm">${tog(S.prefs.alarm)}</button></div>
+    <div class="pref"><div class="t"><b>Trusted contact</b><span>Maa, +91 98xxx x4521, sees every trip live</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
+  </div>
+  <button class="card demo" data-act="driverMode"><span class="pill-demo">Demo</span><span class="dm"><b>Switch to the driver app</b><span>See Santosh's route, riders and codes</span></span></button>
+</div>` };
+function tabTime(){ return S.phase === 'sun' ? '9:14' : S.nightDone ? hm(1309 + eveShift()) : tr(567); }
+
+/* ======================= driver screens ======================= */
+const DSTOPS = [
+  { k:'meena', name:'Meena R.', place:'Ketkipada, Shiv Mandir', seat:1, due:513, code:'1196', pt:[40, 156] },
+  { k:'priya', name:'Priya S.', place:'Shanti Apartments gate', seat:2, due:517, code:'4821', pt:[150, 80] },
+  { k:'anita', name:'Anita K.', place:'Rawalpada junction', seat:3, due:521, code:'3307', pt:[268, 118] }
+];
+const countIn = () => DSTOPS.filter(r => S.d.boarded[r.k]).length;
+const dEarned = () => 280 + (S.d.done ? countIn() * 20 : 0);
+const dRiders = () => 14 + (S.d.done ? countIn() : 0);
+
+screens.dhome = { driver:true, tab:'dhome', time:() => S.d.done ? pl(526) : pl(510), html:() => {
+  const deps = [[473, 3, 'done'], [493, 3, 'done'], [513, 3, S.d.done ? 'done' : 'now'], [533, 2, ''], [553, 1, '']];
+  return `<div class="page">
+  <div class="row between hello"><div><div class="muted small">${dayLabel(1)}</div><div class="h1">Good morning, Santosh</div></div><span class="chip green">On duty</span></div>
+  <div class="card"><div class="row between"><b>Today's route: R12</b><span class="small muted">2.5 km · 3 stops</span></div>
+    <div class="small muted mt2">Ketkipada to Dahisar (E) Metro, Gate 1. Timed to Metro Line 7.</div>
+    <div class="mapbox mt10" style="margin-bottom:8px">${mapSVG(S.d.done ? 'driver' : 'driverPre')}</div>
+    <div class="small muted">4 autos run R12 today, so riders get one every 5 minutes at peak.</div></div>
+  <div class="card"><b>Your departures</b><div class="small muted">How many riders are coming on each trip</div>
+    ${deps.map(([m, n, st]) => `<div class="dep ${st}"><span class="tm">${pl(m)}</span><span class="dots">${[1, 2, 3].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span><span class="grow small">${st === 'done' && m === 513 ? countIn() + ' dropped' : n + ' of 3'} · train ${pl(m + 17)}</span>${st === 'done' ? `<span class="chip green">${I.check} Done</span>` : st === 'now' ? `<button class="chip blue" data-go="ddep">Open</button>` : ''}</div>`).join('')}
+  </div>
+  ${S.d.done ? '' : `<button class="btn" data-go="ddep">Start ${pl(513)} pick-ups</button><div style="height:12px"></div>`}
+  <div class="card"><div class="row between"><span class="row g6">${I.battery}<b>Battery 64%</b></span><span class="small muted">Enough till 11:30 am</span></div><div class="small muted mt4">Charging slot booked from 11:30 am to 1:00 pm at the Dahisar depot, between the two peaks.</div></div>
+  <div class="card"><div class="row between"><b>Earned today</b><b>₹${dEarned()}</b></div><div class="small muted">${dRiders()} riders so far · no commission · platform fee ₹40 a day</div></div>
+  <button class="link" data-act="riderMode">Switch to the rider app</button>
+</div>`; } };
+
+function stopRow(r, i){
+  const b = S.d.boarded[r.k], ns = S.d.noshow === r.k;
+  const status = b ? `<span class="chip green">${I.check} In</span>` : ns ? `<span class="chip amber">Moved to next</span>` : (i === S.d.stage && !S.d.moving) ? `<span class="chip blue">Now</span>` : `<span class="chip">${pl(r.due)}</span>`;
+  return `<div class="stop"><div class="seat ${b ? 'ok' : ns ? 'warn' : ''}">${r.seat}</div><div class="grow"><b>${i + 1}. ${r.place}</b><div class="small muted">${r.name} · seat ${r.seat}</div></div>${status}</div>`;
+}
+function ddepAction(){
+  const D = S.d, r = DSTOPS[D.stage];
+  if(D.moving) return `<div class="card next"><b>Driving to ${D.stage === 1 ? 'stop 3, Rawalpada junction' : 'Dahisar (E) Metro, Gate 1'}</b><div class="small muted mt4">Riders can see you on their map.</div></div>`;
+  if(D.stage === 4) return `<div class="card next ok"><div class="row g6" style="color:var(--brand-dark)">${I.check}<b>Trip complete · +₹${countIn() * 20}</b></div><div class="small muted mt4">${countIn()} riders dropped at Gate 1 at ${PL(526)}, 4 minutes before their train. Next departure ${PL(533)}: 2 riders booked.</div><button class="btn mt10" data-act="driverBack">Back to route</button></div>`;
+  if(D.stage === 3) return `<div class="card next"><b>${countIn()} of 3 riders in</b><div class="small muted mt4">Drop at Dahisar (E) Metro, Gate 1 by ${PL(526)}. Their train leaves at ${PL(530)}.</div><button class="btn mt10" data-act="startTrip">Start trip to metro</button></div>`;
+  if(D.waiting) return `<div class="card next"><b>Waiting for ${r.name}</b><div class="small muted mt4">Wait up to 1 minute. After that you can leave: the seat is released and ${r.name.split(' ')[0]} is moved to the next Saathi.</div><div class="progress"><i id="waitBar"></i></div><div class="btns mt8"><button class="btn sm" data-act="enterCode" data-k="${r.k}">${r.name.split(' ')[0]} is here</button><button class="btn sm ghost" id="leaveBtn" data-act="leaveWithout" disabled>Leave without</button></div></div>`;
+  return `<div class="card next"><div class="small muted">Stop ${D.stage + 1} of 3 · due ${PL(r.due)}</div><b class="big">${r.place}</b>
+    <div class="row between mt8"><div><b>${r.name}</b><div class="small muted">Seat ${r.seat}</div></div><button class="btn sm auto" data-act="enterCode" data-k="${r.k}">Enter code</button></div>
+    <button class="link" data-act="noShow">Rider not here?</button></div>`;
+}
+screens.ddep = { driver:true, time:() => pl([0, 517, 521, 521, 526][S.d.stage]), html:() => `<div class="page">
+  <div class="top"><button class="back" aria-label="Back" data-go="dhome">${I.back}</button><h2>${PL(513)} trip</h2><span class="chip green ml-auto">${I.shield} Women-only</span></div>
+  <div class="mapbox">${mapSVG('driver')}</div>
+  ${ddepAction()}
+  <div class="card">${DSTOPS.map(stopRow).join('')}<div class="stop"><div class="seat metro">M</div><div class="grow"><b>Drop: Dahisar (E) Metro, Gate 1</b><div class="small muted">${PL(526)} · train at ${PL(530)}</div></div></div></div>
+</div>` };
+
+screens.dearn = { driver:true, tab:'dearn', time:() => S.d.done ? pl(527) : pl(510), html:() => {
+  const days = [['Mon', 1520], ['Tue', 1580], ['Wed', 1490], ['Thu', 1610], ['Fri', 1640], ['Sat', 1110]];
+  return `<div class="page"><div class="top"><h2>Earnings</h2></div>
+  <div class="card"><div class="small muted">Last week, 27 September to 2 October</div><b class="earn">₹8,950</b>
+    <div class="small" style="color:var(--brand-dark);font-weight:700">28% more than your weekly average before Saathi (₹6,980)</div>
+    <div class="bars">${days.map(([d, v]) => `<div style="height:${Math.round(v / 1700 * 100)}%"><em>₹${(v / 1000).toFixed(1)}k</em><span>${d}</span></div>`).join('')}</div></div>
+  <div class="card"><div class="kv"><span>Today so far</span><b>₹${dEarned()} · ${dRiders()} riders</b></div>
+    <div class="kv"><span>Seats filled per trip</span><b>2.6 of 3</b></div>
+    <div class="kv"><span>Wait between trips</span><b>About 3 min</b></div>
+    <div class="kv"><span>Platform fee</span><b>₹40 a day, no commission</b></div>
+    <div class="kv"><span>Charging</span><b>About ₹90 a day</b></div></div>
+  <p class="small muted">Saturday 2 October was a public holiday, so fewer riders booked.</p>
+</div>`; } };
+
+/* ======================= render ======================= */
+const riderTabs = [['home', 'Home', I.home], ['trips', 'Trips', I.trips], ['pass', 'Pass', I.pass], ['profile', 'Profile', I.user]];
+const driverTabs = [['dhome', 'Route', I.route], ['dearn', 'Earnings', I.wallet]];
+function renderTabs(def){
+  const tb = $('#tabbar');
+  if(!def.tab){ tb.classList.add('hidden'); return; }
+  tb.classList.remove('hidden');
+  tb.innerHTML = (def.driver ? driverTabs : riderTabs).map(([k, l, ic]) => `<button class="${def.tab === k ? 'on' : ''}" data-go="${k}">${ic}<span>${l}</span></button>`).join('');
+}
+function paint(def, fresh){
+  const keep = view.scrollTop;
+  view.innerHTML = `<div class="page-wrap${fresh ? ' enter' : ''}">${def.html()}</div>`;
+  view.scrollTop = fresh ? 0 : keep;
+  setStatus(def.time());
+  screenEl.classList.toggle('dark', !!def.dark);
+  renderTabs(def);
+}
+function go(name){
+  closeSheet(); clearTimers();
+  clearTimeout(toast.h); $('#toast').classList.remove('show');
+  const def = screens[name]; if(!def) return;
+  if(name === 'lock' && !S.lock) S.lock = lockMorning();
+  S.screen = name; S.mode = def.driver ? 'driver' : 'rider';
+  paint(def, true);
+  if(def.after) def.after();
+  try{ history.replaceState(null, '', '#' + name); }catch(e){}
+  renderGuide();
+}
+function syncInputs(){ const h = $('#inHome'), w = $('#inWork'); if(h && h.value.trim()) S.prefs.home = h.value.trim(); if(w && w.value.trim()) S.prefs.work = w.value.trim(); }
+function rerender(){ syncInputs(); paint(screens[S.screen], false); renderGuide(); }
+function resetMorning(){ Object.assign(S, { phase:'sun', snoozes:0, rebooked:false, late:false, tomorrow:null, tripDone:false, rating:0, tags:[], credit:0, lock:null, todaySkipped:false, nightArrived:false, nightDone:false }); }
+
+/* ======================= driver flow helpers ======================= */
+function renderCodeBox(){ const b = $('#codebox'); if(b) b.innerHTML = [0, 1, 2, 3].map(i => `<span class="${i < S.d.code.length ? 'f' : ''}">${S.d.code[i] || ''}</span>`).join(''); }
+function dAdvance(){
+  const D = S.d;
+  if(D.stage === 1){
+    D.moving = true; rerender();
+    animate(PTS.d23, 3500, p => setStatus(pl(518 + Math.round(p * 3))), () => { D.car = [268, 118]; D.moving = false; D.stage = 2; rerender(); });
+  } else if(D.stage === 2){ D.stage = 3; rerender(); }
+}
+
+/* ======================= actions ======================= */
+const A = {
+  arrive(b){ S.prefs.arrive = b.dataset.v; rerender(); },
+  day(b){ syncInputs(); const v = +b.dataset.v; S.prefs.days = S.prefs.days.includes(v) ? S.prefs.days.filter(x => x !== v) : [...S.prefs.days, v].sort((a, c) => a - c); rerender(); },
+  toSetup2(){ syncInputs(); if(!S.prefs.days.length){ toast('Pick at least one day.'); return; } go('setup2'); },
+  pref(b){ const k = b.dataset.k; S.prefs[k] = !S.prefs[k]; rerender();
+    if(k === 'womenOnly') toast(S.prefs.womenOnly ? 'Women-only rides on. You will share only with verified women.' : 'Women-only rides off. You will share with verified co-riders.');
+    if(k === 'alarm' && !S.prefs.alarm) toast('Alarm off. You will still get a notification when it is time to leave.'); },
+  pay(b){ S.pay = b.dataset.v; rerender(); },
+  autopilotToggle(){ S.autopilot = !S.autopilot; rerender(); },
+  startAutopilot(){ S.phase = 'sun'; go('home'); toast(S.autopilot ? `Autopilot is on. Your commute is booked ${daysLabel()}.` : `Booked for ${dayName(cday())}.`); },
+  skipNext(){ const d = cday(); sheet(`<b class="sh-title">Skip ${dayName(d)}'s commute?</b><p class="muted small" style="margin-bottom:14px">Your seats go to other riders and autopilot books again from ${dayName(nextDay(d))}. No charge.</p><button class="btn" data-act="confirmSkip">Skip ${dayName(d)}</button><button class="btn ghost" data-act="closeSheet">Keep it</button>`); },
+  confirmSkip(){ const d = dayName(cday()); S.skipNext = true; closeSheet(); rerender(); toast(`${d} skipped. No charge.`); },
+  undoSkip(){ S.skipNext = false; rerender(); },
+  changeTime(){ sheet(`<b class="sh-title">Reach office by</b><div class="seg" style="margin:12px 0 14px">${['9:00', '9:30', '10:00'].map(x => `<button class="${S.prefs.arrive === x ? 'on' : ''}" data-act="arriveSheet" data-v="${x}">${x} am</button>`).join('')}</div><p class="small muted">Saathi re-times every leg to the trains for you.</p>`); },
+  arriveSheet(b){ S.prefs.arrive = b.dataset.v; closeSheet(); rerender(); toast(`Done. Every leg is re-timed so you reach by ${b.dataset.v} am.`); },
+  closeSheet(){ closeSheet(); },
+  morning(){ resetMorning(); S.lock = lockMorning(); go('lock'); },
+  openLive(){ go('live'); },
+  snooze(){
+    if(S.snoozes === 0){ S.snoozes = 1; S.lock = { abs:513, next:'alarm', delay:1800, notes:[{ when:'now', title:`Snoozed until ${tr(514)}`, body:`Your Saathi still reaches your gate at ${TR(517)}.` }] }; go('lock'); return; }
+    sheet(`<b class="sh-title">Snooze again and you'll miss this Saathi</b><p class="muted small" style="margin-bottom:14px">It reaches your gate at ${TR(517)} and can wait only 1 minute.</p>
+      <button class="btn" data-act="rebook">Move me to the next Saathi</button><p class="small muted center mt4">Pick-up ${pl(525)}, train ${pl(538)}, office by ${PL(572)}</p>
+      <button class="btn ghost mt12" data-act="leaving">I'm leaving now</button>`);
+  },
+  rebook(){ S.rebooked = true; S.snoozes = 0; S.lock = { abs:515, next:'alarm', delay:2600, notes:[{ when:'now', title:`Moved to the ${TR(517)} Saathi`, body:`Your earlier seat went to the next rider. We'll ring again at ${TR(512)}.` }] }; go('lock'); },
+  leaving(){ go('live'); },
+  skipToday(){ sheet(`<b class="sh-title">Skip today's commute?</b><p class="muted small" style="margin-bottom:14px">Your seats go to other riders. No charge.</p><button class="btn" data-act="confirmSkipToday">Skip today</button><button class="btn ghost" data-act="closeSheet">Go back</button>`); },
+  confirmSkipToday(){ S.todaySkipped = true; S.phase = 'mon'; go('home'); toast('Today skipped. No charge.'); },
+  shareTrip(){ toast('Live trip link sent to Maa on WhatsApp.'); },
+  call(){ toast('Calling through a masked number. Neither of you sees the other\'s phone number.'); },
+  sos(){ sheet(`<b class="sh-title" style="color:var(--red)">Send SOS?</b><p class="muted small" style="margin-bottom:14px">The Saathi safety team and Maa get your live location, and the team calls you within 30 seconds.</p><button class="btn red" data-act="sosConfirm">Send SOS</button><button class="btn ghost" data-act="closeSheet">Cancel</button>`); },
+  sosConfirm(){ closeSheet(); toast('Demo only: no alert was sent. In the real app the safety team calls you within 30 seconds.', 3800); },
+  boarded(){ go('ride'); },
+  lateToggle(){ S.late = !S.late; $('#lmCard').innerHTML = lmCard(); if(S.late) toast('Saathi alert: your last-mile auto is running 7 minutes late. That leg is now free.', 3600); },
+  rideLast(b){
+    b.disabled = true; b.textContent = 'On the way';
+    const startM = S.late ? 565 : 558;
+    animate(PTS.last, 7000, p => { setStatus(tr(startM + Math.round(p * 6))); }, () => { S.tripDone = true; if(S.late && S.pay === 'pass') S.credit = 20; go('summary'); });
+  },
+  rate(b){ S.rating = +b.dataset.v; rerender(); if(S.rating <= 3) toast('Thanks. Tell us what went wrong and we will look into it.'); },
+  tag(b){ const v = b.dataset.v; S.tags = S.tags.includes(v) ? S.tags.filter(x => x !== v) : [...S.tags, v]; rerender(); },
+  tomorrow(b){
+    S.tomorrow = b.dataset.v;
+    const nd = nextDay(cday());
+    if(S.screen === 'summary') $('#tomorrowCard').innerHTML = tomorrowHTML(); else rerender();
+    toast(S.tomorrow === 'yes' ? `Booked for ${dayName(nd)}. Same route, same time.` : `${dayName(nd)} skipped. Your seats went to other riders.`);
+  },
+  autopilotOn(){ S.autopilot = true; $('#tomorrowCard').innerHTML = tomorrowHTML(); toast(`Autopilot is on. Booked ${daysLabel()}.`); },
+  summaryDone(){ S.phase = 'mon'; go('home'); },
+  toEvening(){ go('evening'); },
+  eveTime(b){ S.eveTime = b.dataset.v; rerender(); },
+  startNight(){ S.nightArrived = false; go('night'); },
+  nightRate(b){ S.nightRating = +b.dataset.v; $('#nightEnd').innerHTML = nightEnd(); },
+  nightDone(){ S.nightDone = true; go('home'); },
+  payPass(){ S.pay = 'pass'; rerender(); toast('Saathi Pass is on: ₹1,799 a month.'); },
+  payTrip(){ S.pay = 'trip'; rerender(); toast('Back to paying per trip.'); },
+  driverMode(){ go('dhome'); },
+  riderMode(){ go('home'); },
+  enterCode(b){
+    const r = DSTOPS.find(x => x.k === b.dataset.k), first = r.name.split(' ')[0];
+    S.d.codeFor = r.k; S.d.code = '';
+    sheet(`<b class="sh-title">Enter ${first}'s code</b><p class="muted small">Ask for the 4-digit code on their phone. It confirms the right person is getting in.</p>
+      <div class="codebox" id="codebox"></div><div class="small center" id="codeMsg" style="color:var(--red);min-height:18px"></div>
+      <div class="keypad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map(k => k ? `<button data-act="key" data-v="${k}" aria-label="${k === 'del' ? 'Delete' : k}">${k === 'del' ? '⌫' : k}</button>` : '<span></span>').join('')}</div>
+      <p class="small muted center mt10">Demo: ${first}'s code is <b>${r.code}</b></p>`);
+    renderCodeBox();
+  },
+  key(b){
+    const D = S.d, v = b.dataset.v;
+    if(D.code.length === 4) return;
+    if(v === 'del') D.code = D.code.slice(0, -1); else D.code += v;
+    renderCodeBox();
+    if(D.code.length < 4) return;
+    const r = DSTOPS.find(x => x.k === D.codeFor);
+    if(D.code === r.code){
+      setTimeout(() => { closeSheet(); D.boarded[r.k] = true; D.waiting = false; toast(`${r.name} is in. Seat ${r.seat}.`); dAdvance(); }, 250);
+    } else {
+      $('#codebox').classList.add('err'); $('#codeMsg').textContent = "That code doesn't match. Ask again.";
+      setTimeout(() => { D.code = ''; renderCodeBox(); const cb = $('#codebox'); if(cb) cb.classList.remove('err'); }, 450);
+    }
+  },
+  noShow(){
+    S.d.waiting = true; rerender();
+    let p = 0; const id = every(() => {
+      p += 1 / 30; const bar = $('#waitBar'); if(bar) bar.style.width = Math.min(100, p * 100) + '%';
+      if(p >= 1){ clearInterval(id); const lb = $('#leaveBtn'); if(lb) lb.disabled = false; }
+    }, 200);
+  },
+  leaveWithout(){ const r = DSTOPS[S.d.stage]; S.d.noshow = r.k; S.d.waiting = false; toast(`Seat released. ${r.name} has been moved to the ${PL(533)} Saathi and told.`, 3600); dAdvance(); },
+  startTrip(){
+    const D = S.d; D.moving = true; rerender();
+    animate(PTS.d3m, 4000, p => setStatus(pl(521 + Math.round(p * 5))), () => { D.car = [330, 156]; D.moving = false; D.stage = 4; D.done = true; rerender(); });
+  },
+  driverBack(){ go('dhome'); }
+};
+
+/* ======================= guide ======================= */
+const SCENES = [
+  { g:"Priya's morning", s:'setup1', t:'Set up the commute once', d:'Home, work, arrival time, days, safety options', f:() => { S = S0(); } },
+  { s:'plan', t:'See the daily plan', d:'Saathi, Metro Line 7, Saathi: time and fare against today', f:() => {} },
+  { s:'home', t:'Autopilot is on', d:'Tomorrow is booked; skip a day or change the time', f:() => { resetMorning(); } },
+  { s:'lock', t:'Leave-now alarm', d:'Notification, then an alarm 5 minutes before pick-up', f:() => { resetMorning(); } },
+  { s:'live', t:'Track the Saathi', d:'Moving map, countdown, seats, driver, share and SOS', f:() => { S.rebooked = false; S.snoozes = 0; } },
+  { s:'ride', t:'Ride to the metro', d:'Live connection to the train, third rider picked up', f:() => { S.rebooked = false; } },
+  { s:'metro', t:'Metro ticket in the app', d:'QR ticket, live stations, last-mile auto waiting', f:() => { S.rebooked = false; S.late = false; } },
+  { s:'summary', t:'Fare and "same ride tomorrow?"', d:'Fare breakdown, rating, yes or no for tomorrow', f:() => { S.rebooked = false; S.late = false; S.tomorrow = null; } },
+  { g:'When things go wrong', id:'late', s:'metro', t:'Last-mile auto runs late', d:'You are told early and that leg becomes free', f:() => { resetMorning(); S.late = true; } },
+  { id:'snooze', s:'alarm', t:'Snooze too long', d:'Tap "Snooze again": Saathi moves you to the next auto', f:() => { resetMorning(); S.snoozes = 1; } },
+  { g:'Night', s:'evening', t:'Ride home at night', d:'Women-only sharing, live trip for family, drop at your gate', f:() => { resetMorning(); S.phase = 'mon'; S.tripDone = true; } },
+  { g:'Driver app', s:'dhome', t:"Today's route and riders", d:'Departures timed to trains, riders booked, battery, earnings', f:() => {} },
+  { s:'ddep', t:'Pick-ups and boarding codes', d:"Type the rider's code, handle a no-show, start the trip", f:() => { S.d = S0().d; } }
+];
+function sceneIndex(){
+  const sc = S.screen;
+  if(sc === 'setup1' || sc === 'setup2') return 0;
+  if(sc === 'plan') return 1;
+  if(sc === 'home') return S.phase === 'sun' ? 2 : -1;
+  if(sc === 'lock' || sc === 'alarm') return S.snoozes > 0 || S.rebooked ? 9 : 3;
+  if(sc === 'live' || sc === 'ride') return S.rebooked ? 9 : sc === 'live' ? 4 : 5;
+  if(sc === 'metro' || sc === 'lastmile') return S.late ? 8 : 6;
+  if(sc === 'summary') return S.late ? 8 : 7;
+  if(sc === 'evening' || sc === 'night') return 10;
+  if(sc === 'dhome' || sc === 'dearn') return 11;
+  if(sc === 'ddep') return 12;
+  return -1;
+}
+function renderGuide(){
+  const cur = sceneIndex();
+  let html = `<div class="g-head"><div class="g-mark">${I.auto}</div><div><h1>Ola Saathi</h1><div class="sub">Clickable prototype · Mumbai pilot on Metro Line 7</div></div></div>
+  <p class="g-intro">Use it like a real app, or jump to any moment below. The rider is <b>Priya</b>, who goes from Dahisar East to MIDC, Andheri East. The driver is <b>Santosh</b> on route R12.</p>
+  <div class="modes"><button class="${S.mode === 'rider' ? 'on' : ''}" data-gmode="rider">Rider app</button><button class="${S.mode === 'driver' ? 'on' : ''}" data-gmode="driver">Driver app</button></div>`;
+  SCENES.forEach((sc, i) => {
+    if(sc.g) html += (i ? '</div>' : '') + `<h2>${sc.g}</h2><div class="scenes">`;
+    html += `<button data-gscene="${i}" class="${i === cur ? 'on' : ''}"><span class="n">${i + 1}</span><span>${sc.t}<small>${sc.d}</small></span></button>`;
+  });
+  html += `</div><div class="g-note"><b>Works for real:</b> every button and toggle, timers, moving maps, snooze and re-booking, the free leg when an auto is late, ratings, "same ride tomorrow" and the driver's code check. <b>Simulated:</b> payments, GPS, notifications, the metro QR, names and numbers.</div>
+  <div class="g-credit">Concept prototype by Shivangi Pandita for the Ola Electric APM assignment. Not an Ola product.</div>
+  <button class="g-restart" data-grestart="1">Restart from the beginning</button>`;
+  $('#guide').innerHTML = html; $('#guideM').innerHTML = html;
+}
+
+/* ======================= events ======================= */
+document.addEventListener('click', e => {
+  const gs = e.target.closest('[data-gscene]');
+  if(gs){ const sc = SCENES[+gs.dataset.gscene]; sc.f(); $('#guideOverlay').classList.remove('show'); go(sc.s); return; }
+  const gm = e.target.closest('[data-gmode]');
+  if(gm){ $('#guideOverlay').classList.remove('show'); go(gm.dataset.gmode === 'driver' ? 'dhome' : 'home'); return; }
+  if(e.target.closest('[data-grestart]')){ S = S0(); $('#guideOverlay').classList.remove('show'); go('welcome'); return; }
+  const g = e.target.closest('[data-go]');
+  if(g){ e.preventDefault(); go(g.dataset.go); return; }
+  const a = e.target.closest('[data-act]');
+  if(a && A[a.dataset.act] && !a.disabled){ e.preventDefault(); A[a.dataset.act](a, e); }
+});
+$('#sheetWrap').addEventListener('click', e => { if(e.target.id === 'sheetWrap') closeSheet(); });
+$('#guideFab').addEventListener('click', () => $('#guideOverlay').classList.add('show'));
+$('#guideOverlay').addEventListener('click', e => { if(e.target.id === 'guideOverlay') $('#guideOverlay').classList.remove('show'); });
+document.addEventListener('keydown', e => {
+  if(!$('#codebox') || !$('#sheetWrap').classList.contains('show')) return;
+  if(/^[0-9]$/.test(e.key)) A.key({ dataset:{ v:e.key } });
+  else if(e.key === 'Backspace') A.key({ dataset:{ v:'del' } });
+});
+
+/* ======================= start ======================= */
+(function start(){
+  const h = (location.hash || '').slice(1);
+  const sc = SCENES.find(x => x.id === h);
+  if(sc){ sc.f(); go(sc.s); }
+  else if(screens[h]) go(h);
+  else go('welcome');
+})();
+</script>
+</body>
+</html>
