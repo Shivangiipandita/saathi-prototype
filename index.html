@@ -397,7 +397,7 @@ const S0 = () => ({
   prefs:{ womenOnly:true, alarm:true, share:true, arrive:'9:30', days:[1,2,3,4,5,6],
     home:'Shanti Apartments, Ketkipada, Dahisar East', work:'Akruti Trade Centre, MIDC, Andheri East' },
   pay:'trip', autopilot:true, skipNext:false,
-  snoozes:0, rebooked:false, late:false, todaySkipped:false, lock:null,
+  snoozes:0, rebooked:false, late:false, jam:false, jamKnown:false, todaySkipped:false, lock:null,
   rating:0, tags:[], tomorrow:null, credit:0, tripDone:false,
   eveTime:'9:00', nightArrived:false, nightDone:false, nightRating:0,
   d:{ stage:1, boarded:{ meena:true, priya:false, anita:false }, car:[150,80], moving:false, done:false, noshow:null, waiting:false, code:'', codeFor:null }
@@ -421,7 +421,8 @@ const hm = m => fmt(m).slice(0, -3);
 const off = () => S.prefs.arrive === '9:00' ? -30 : S.prefs.arrive === '10:00' ? 30 : 0;
 const R = () => S.rebooked ? 8 : 0;                 // next Saathi is timed to the next train, 8 minutes later
 const PL = m => fmt(m + off()), pl = m => hm(m + off());                 // planned times
-const TR = m => fmt(m + off() + R()), tr = m => hm(m + off() + R());     // today's live trip
+const J = () => S.jam && S.jamKnown ? 8 : 0;           // a traffic jam moves you to the next train, 8 minutes later
+const TR = m => fmt(m + off() + R() + (m >= 526 ? J() : 0)), tr = m => hm(m + off() + R() + (m >= 526 ? J() : 0));     // today's live trip
 const eveShift = () => S.eveTime === '8:45' ? -15 : S.eveTime === '9:15' ? 15 : 0;
 const E = m => fmt(1260 + eveShift() + m);
 const tog = on => `<span class="toggle ${on ? 'on' : ''}"></span>`;
@@ -432,7 +433,7 @@ const dayDate = d => (d + 3) + ' October';
 const dayLabel = d => dayName(d) + ', ' + dayDate(d);
 function daysLabel(){ const ds = [...S.prefs.days].sort((a, b) => a - b), k = ds.join(''); return k === '123456' ? 'Monday to Saturday' : k === '12345' ? 'Monday to Friday' : k === '1234567' ? 'every day' : !k ? 'no days picked' : ds.map(d => DAYS[d - 1]).join(', '); }
 const arrBase = () => 564 + (S.late ? 7 : 0);
-const minsVsTarget = () => arrBase() + R() - 570;
+const minsVsTarget = () => arrBase() + R() + J() - 570;
 const banner = (cls, icon, title, body) => `<div class="banner ${cls}">${icon}<div><b>${title}</b>${body}</div></div>`;
 const setBanner = (id, ...a) => { const el = document.getElementById(id); if(el) el.innerHTML = banner(...a); };
 const seat = (cls, a, b) => `<div class="seatb ${cls}"><b>${a}</b>${b}</div>`;
@@ -616,7 +617,7 @@ function homeMon(){
   let top;
   if(S.nightDone) top = `<div class="card row"><span class="ic-ok">${I.check}</span><div><b>Home at ${E(48)}</b><div class="small muted">${S.prefs.share ? 'We told your emergency contact you reached home.' : 'Have a good night.'}</div></div></div>`;
   else if(S.todaySkipped) top = `<div class="card"><b>You skipped today's commute</b><div class="small muted mt4">Your seats went to other riders. No charge.</div></div>` + eveCard();
-  else top = `<div class="card row">${diff <= 0 ? `<span class="ic-ok">${I.check}</span>` : `<span class="ic-late">${I.clock}</span>`}<div><b>Reached office at ${TR(arrBase())}</b><div class="small muted">${diff <= 0 ? 'On time, ' + (-diff) + ' min early' : diff + ' min late' + (S.late ? '. The late leg was free.' : '')}</div></div></div>` + eveCard();
+  else top = `<div class="card row">${diff <= 0 ? `<span class="ic-ok">${I.check}</span>` : `<span class="ic-late">${I.clock}</span>`}<div><b>Reached office at ${TR(arrBase())}</b><div class="small muted">${diff <= 0 ? 'On time, ' + (-diff) + ' min early' : diff + ' min late' + ((S.late || S.jam) ? '. The late leg was free.' : '')}</div></div></div>` + eveCard();
   return `<div class="page">
   <div class="row between hello"><div><div class="muted small">${dayLabel(d)}</div><div class="h1">${S.nightDone ? 'Good night, Priya' : 'Good morning, Priya'}</div></div><button class="avatar" data-go="profile" aria-label="Profile">PS</button></div>
   ${top}
@@ -694,10 +695,12 @@ screens.live = { time:() => tr(513), html:() => `<div class="page">
 screens.ride = { time:() => tr(518), html:() => `<div class="page">
   <div class="top"><h2>On the way to the metro</h2></div>
   <div class="mapbox">${mapSVG('ride')}<div class="eta bl"><b id="eta">${tr(526)}</b><span>at Dahisar (E) Metro</span></div></div>
-  <div class="card"><div class="row between"><b>Metro Line 7 at ${TR(530)}</b><span class="chip green">4 min to spare</span></div>
-    <div class="small muted mt4">Platform 1 towards Gundavali. If this auto makes you miss the train, the leg is free.</div>
+  <div id="jamBanner"></div>
+  <div class="card"><div class="row between"><b id="connTitle">Metro Line 7 at ${TR(530)}</b><span class="chip green" id="connChip">4 min to spare</span></div>
+    <div class="small muted mt4" id="connNote">Platform 1 towards Gundavali. If this auto makes you miss the train, the leg is free.</div>
     <div class="progress"><i id="prog"></i></div>
-    <div class="row between small muted"><span>Your gate</span><span>Rawalpada</span><span>Metro</span></div></div>
+    <div class="row between small muted"><span>Your gate</span><span>Rawalpada</span><span>Metro</span></div>
+    <div class="pref np mt12" style="border-top:1px solid var(--line);padding-top:12px"><div class="t"><b><span class="pill-demo">Demo</span> Hit a traffic jam</b><span>See Saathi re-plan the rest of the trip</span></div><button data-act="jamToggle" aria-label="Hit a traffic jam">${tog(S.jam)}</button></div></div>
   <div class="card">
     <div class="seats" id="seats">${seat('in', 'Seat 1', 'On board')}${seat('me', 'Seat 2', 'You')}${seat('wait', 'Seat 3', 'Rawalpada')}</div>
     <div class="row wrap mt10">${coRiders()}</div>
@@ -706,13 +709,36 @@ screens.ride = { time:() => tr(518), html:() => `<div class="page">
   </div>
   <button class="btn sticky hidden" id="toMetro" data-go="metro">Open my metro ticket</button>
 </div>`, after(){
-  let third = false;
-  animate(PTS.ride, 12000, p => {
+  let third = false, p = 0, last = null;
+  const el = document.getElementById('car');
+  const frame = ts => {
+    if(!el || !el.isConnected) return;
+    if(last === null) last = ts;
+    const dt = Math.min(64, ts - last); last = ts;
+    const crawling = S.jam && p > .3 && p < .46;          // stuck in the jam
+    p = Math.min(1, p + dt / 12000 * (crawling ? .3 : 1));
+    const [x, y] = along(PTS.ride, p);
+    el.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
     $('#prog').style.width = (p * 100) + '%';
-    setStatus(tr(518 + Math.round(p * 8)));
+    setStatus(hm(518 + off() + R() + Math.round(p * (8 + J()))));
+    if(S.jam && !S.jamKnown && p > .3) jamReplan();
     if(!third && p > .48){ third = true; $('#seats').innerHTML = seat('in', 'Seat 1', 'On board') + seat('me', 'Seat 2', 'You') + seat('in', 'Seat 3', 'On board'); toast('Third rider picked up at Rawalpada. All 3 seats are full.'); }
-  }, () => { $('#eta').textContent = 'Arrived'; $('#toMetro').classList.remove('hidden'); toast(`You're at Dahisar (E) Metro at ${TR(526)}. Your train leaves in 4 minutes.`); });
+    if(p < 1) timers.push(['r', requestAnimationFrame(frame)]);
+    else { $('#eta').textContent = 'Arrived'; $('#toMetro').classList.remove('hidden'); toast(`You're at Dahisar (E) Metro at ${TR(526)}. Your ${S.jamKnown ? 'new ' : ''}train leaves in 4 minutes.`); }
+  };
+  timers.push(['r', requestAnimationFrame(frame)]);
 } };
+function jamReplan(){
+  const oldTrain = TR(530);
+  S.jamKnown = true;
+  const newTrain = TR(530), lastMile = TR(558), arrival = TR(564);
+  setBanner('jamBanner', 'amber', I.clock, 'Traffic jam on the highway', `You will miss the ${oldTrain} train, so Saathi has re-planned your trip: the ${newTrain} train, and your last-mile Saathi at Gate 2 at ${lastMile}. New arrival ${arrival}. This leg is free.`);
+  $('#connTitle').textContent = 'Metro Line 7 at ' + newTrain;
+  const chip = $('#connChip'); chip.className = 'chip amber'; chip.textContent = 'Re-planned';
+  $('#connNote').textContent = 'Your metro ticket still works, because it is not tied to one train. Your old last-mile seat has gone to someone on the earlier train, so nobody waits for you.';
+  $('#eta').textContent = tr(526);
+  toast(`Saathi re-planned your trip: the ${newTrain} train, arriving ${arrival}. This leg is free.`, 3800);
+}
 
 const STATIONS = ['Dahisar (E)', 'Ovaripada', 'Rashtriya Udyan', 'Devipada', 'Magathane', 'Poisar', 'Akurli', 'Kurar', 'Dindoshi', 'Aarey', 'Goregaon (E)', 'Jogeshwari (E)', 'Mogra', 'Gundavali'];
 function lmCard(){
@@ -759,7 +785,7 @@ screens.lastmile = { time:() => tr(557), html:() => `<div class="page">
   });
 } };
 
-function paidToday(){ return S.pay === 'pass' ? 30 : 30 + 20 + (S.late ? 0 : 20); }
+function paidToday(){ return S.pay === 'pass' ? 30 : 30 + (S.jam ? 0 : 20) + (S.late ? 0 : 20); }
 function tomorrowHTML(){
   const d = cday(), nd = nextDay(d), when = nd === d + 1 ? 'tomorrow' : 'on ' + dayName(nd), date = dayName(nd) + ' ' + dayDate(nd);
   if(S.tomorrow === 'yes') return `<div class="row g6" style="color:var(--brand-dark)">${I.check}<b>Booked for ${date}</b></div><div class="small muted mt4">Same route. We'll ring at ${PL(512)} and your Saathi reaches your gate at ${PL(517)}.</div>${S.autopilot ? '' : `<button class="btn ghost mt10" data-act="autopilotOn">Book it every day with autopilot</button>`}`;
@@ -768,19 +794,22 @@ function tomorrowHTML(){
   <div class="btns mt10"><button class="btn" data-act="tomorrow" data-v="yes">${S.autopilot ? 'Yes, keep it' : 'Yes, book it'}</button><button class="btn ghost" data-act="tomorrow" data-v="no">${S.autopilot ? 'No, skip it' : 'No'}</button></div>`;
 }
 screens.summary = { time:() => tr(arrBase() + 1), html:() => {
-  const diff = minsVsTarget(), door = arrBase() - 517, pass = S.pay === 'pass', worth = 30 + 20 + (S.late ? 0 : 20);
-  const sub = S.late ? `${diff > 0 ? diff + ' min after ' + S.prefs.arrive + ' am. ' : ''}Your last-mile auto was late, so that leg is free.`
+  const diff = minsVsTarget(), door = arrBase() + J() - 517, pass = S.pay === 'pass', worth = 30 + (S.jam ? 0 : 20) + (S.late ? 0 : 20);
+  const lateTxt = diff > 0 ? diff + ' min after ' + S.prefs.arrive + ' am. ' : '';
+  const sub = (S.jam && S.late) ? `${lateTxt}Traffic made you miss your train and your last-mile auto was late, so both auto legs are free.`
+    : S.jam ? `${lateTxt}Traffic made your first auto miss the train, so Saathi re-planned your trip and that leg is free.`
+    : S.late ? `${lateTxt}Your last-mile auto was late, so that leg is free.`
     : S.rebooked ? `${diff} min after ${S.prefs.arrive} am, because you took the next Saathi.` : `${-diff} min before ${S.prefs.arrive} am. Door to door in ${door} minutes.`;
   const legRow = (lbl, free) => `<div class="kv"><span>${lbl}</span><span>${free ? '<s>₹20</s> <b class="free">Free</b>' : pass ? 'On pass' : '₹20'}</span></div>`;
   return `<div class="page">
   <div class="top"><h2>Trip complete</h2></div>
   <div class="card center">${diff <= 0 ? I.done : I.lateBig}<div class="h1 mt8" style="font-size:22px">Reached office at ${TR(arrBase())}</div><div class="small muted mt4">${sub}</div></div>
   <div class="card"><b>What you paid</b>
-    ${legRow('Saathi auto · ' + TR(517))}
+    ${legRow('Saathi auto · ' + TR(517), S.jam)}
     <div class="kv"><span>Metro Line 7 · Dahisar (E) to Gundavali</span><span>₹30</span></div>
     ${legRow('Saathi auto · ' + TR(S.late ? 565 : 558), S.late)}
     <div class="kv total"><span>${pass ? 'Paid today' : 'Total, one UPI payment'}</span><span>₹${paidToday()}</span></div>
-    ${S.late ? `<span class="chip green mt8">${I.check} ${pass ? '₹20 credit added to your pass' : 'The late leg was not charged'}</span>` : ''}
+    ${(S.late || S.jam) ? `<span class="chip green mt8">${I.check} ${pass ? 'Credit added to your pass for the late leg' : 'The late leg was not charged'}</span>` : ''}
     <div class="compare"><div>Your usual way<b>~80 min · ~₹125</b></div><div class="good">Today with Saathi<b>${door} min · ₹${worth}</b></div></div>
   </div>
   <div class="card"><b>How was your commute?</b><div class="stars mt8">${[1, 2, 3, 4, 5].map(n => `<button class="${S.rating >= n ? 'on' : ''}" data-act="rate" data-v="${n}" aria-label="${n} stars">★</button>`).join('')}</div>
@@ -837,7 +866,7 @@ screens.night = { time:() => hm(1299 + eveShift()), html:() => `<div class="page
 screens.trips = { tab:'trips', time:() => tabTime(), html:() => {
   const rows = [], d = dayName(cday()).slice(0, 3) + ' ' + dayDate(cday()).replace(' October', ' Oct');
   if(S.nightDone) rows.push([d, 'Office to home', (S.prefs.womenOnly ? 'Women-only · ' : '') + 'home ' + E(48), S.pay === 'pass' ? 30 : 70, false]);
-  if(S.tripDone && !S.todaySkipped){ const diff = minsVsTarget(); rows.push([d, 'Home to office', diff <= 0 ? 'On time · ' + TR(arrBase()) : S.late ? 'Auto late · leg not charged' : diff + ' min late', paidToday(), diff > 0]); }
+  if(S.tripDone && !S.todaySkipped){ const diff = minsVsTarget(); rows.push([d, 'Home to office', diff <= 0 ? 'On time · ' + TR(arrBase()) : (S.late || S.jam) ? 'Auto delayed · leg not charged' : diff + ' min late', paidToday(), diff > 0]); }
   return `<div class="page"><div class="top"><h2>Your trips</h2></div>
   ${rows.length ? `<div class="card">${rows.map(r => `<div class="list-item"><div class="seat ${r[4] ? 'warn' : 'ok'}">${r[4] ? '!' : '✓'}</div><div class="grow"><b style="font-size:14px">${r[1]}</b><div class="small muted">${r[0]} · ${r[2]}</div></div><b>₹${r[3]}</b></div>`).join('')}</div>${S.pay === 'pass' ? '<p class="small muted">Saathi legs are on your pass. Amounts are what you paid that day.</p>' : ''}`
   : `<div class="empty"><div class="empty-ic">${I.trips}</div><b>No trips yet</b><p>Your first Saathi commute is on ${dayName(cday())}. Try the demo on the Home tab.</p></div>`}
@@ -965,7 +994,7 @@ function go(name){
 }
 function syncInputs(){ const h = $('#inHome'), w = $('#inWork'); if(h && h.value.trim()) S.prefs.home = h.value.trim(); if(w && w.value.trim()) S.prefs.work = w.value.trim(); }
 function rerender(){ syncInputs(); paint(screens[S.screen], false); renderGuide(); }
-function resetMorning(){ Object.assign(S, { phase:'sun', snoozes:0, rebooked:false, late:false, tomorrow:null, tripDone:false, rating:0, tags:[], credit:0, lock:null, todaySkipped:false, nightArrived:false, nightDone:false }); }
+function resetMorning(){ Object.assign(S, { phase:'sun', snoozes:0, rebooked:false, late:false, jam:false, jamKnown:false, tomorrow:null, tripDone:false, rating:0, tags:[], credit:0, lock:null, todaySkipped:false, nightArrived:false, nightDone:false }); }
 
 /* ======================= driver flow helpers ======================= */
 function renderCodeBox(){ const b = $('#codebox'); if(b) b.innerHTML = [0, 1, 2, 3].map(i => `<span class="${i < S.d.code.length ? 'f' : ''}">${S.d.code[i] || ''}</span>`).join(''); }
@@ -1011,11 +1040,17 @@ const A = {
   sos(){ sheet(`<b class="sh-title" style="color:var(--red)">Send SOS?</b><p class="muted small" style="margin-bottom:14px">The Saathi safety team and your emergency contact get your live location, and the team calls you within 30 seconds.</p><button class="btn red" data-act="sosConfirm">Send SOS</button><button class="btn ghost" data-act="closeSheet">Cancel</button>`); },
   sosConfirm(){ closeSheet(); toast('Demo only: no alert was sent. In the real app the safety team calls you within 30 seconds.', 3800); },
   boarded(){ go('ride'); },
+  jamToggle(b){
+    if(S.jamKnown){ toast('Your trip is already re-planned for today.'); return; }
+    if(!$('#toMetro').classList.contains('hidden')){ toast('You are already at the metro. Pick "Traffic makes you miss the train" in the guide to try it.'); return; }
+    S.jam = !S.jam; b.innerHTML = tog(S.jam);
+    if(S.jam) toast('Demo: the auto is about to hit a jam on the highway.');
+  },
   lateToggle(){ S.late = !S.late; $('#lmCard').innerHTML = lmCard(); if(S.late) toast('Saathi alert: your last-mile auto is running 7 minutes late. That leg is now free.', 3600); },
   rideLast(b){
     b.disabled = true; b.textContent = 'On the way';
     const startM = S.late ? 565 : 558;
-    animate(PTS.last, 7000, p => { setStatus(tr(startM + Math.round(p * 6))); }, () => { S.tripDone = true; if(S.late && S.pay === 'pass') S.credit = 20; go('summary'); });
+    animate(PTS.last, 7000, p => { setStatus(tr(startM + Math.round(p * 6))); }, () => { S.tripDone = true; if(S.pay === 'pass') S.credit = 20 * ((S.late ? 1 : 0) + (S.jam ? 1 : 0)); go('summary'); });
   },
   rate(b){ S.rating = +b.dataset.v; rerender(); if(S.rating <= 3) toast('Thanks. Tell us what went wrong and we will look into it.'); },
   tag(b){ const v = b.dataset.v; S.tags = S.tags.includes(v) ? S.tags.filter(x => x !== v) : [...S.tags, v]; rerender(); },
@@ -1080,11 +1115,12 @@ const SCENES = [
   { s:'plan', t:'See the daily plan', d:'Saathi, Metro Line 7, Saathi: time and fare against today', f:() => {} },
   { s:'home', t:'Autopilot is on', d:'Tomorrow is booked; skip a day or change the time', f:() => { resetMorning(); } },
   { s:'lock', t:'Leave-now alarm', d:'Notification, then an alarm 5 minutes before pick-up', f:() => { resetMorning(); } },
-  { s:'live', t:'Track the Saathi', d:'Moving map, countdown, seats, driver, share and SOS', f:() => { S.rebooked = false; S.snoozes = 0; } },
-  { s:'ride', t:'Ride to the metro', d:'Live connection to the train, third rider picked up', f:() => { S.rebooked = false; } },
-  { s:'metro', t:'Metro ticket in the app', d:'QR ticket, live stations, last-mile auto waiting', f:() => { S.rebooked = false; S.late = false; } },
-  { s:'summary', t:'Fare and "same ride tomorrow?"', d:'Fare breakdown, rating, yes or no for tomorrow', f:() => { S.rebooked = false; S.late = false; S.tomorrow = null; } },
+  { s:'live', t:'Track the Saathi', d:'Moving map, countdown, seats, driver, share and SOS', f:() => { S.rebooked = false; S.snoozes = 0; S.jam = false; S.jamKnown = false; } },
+  { s:'ride', t:'Ride to the metro', d:'Live connection to the train, third rider picked up', f:() => { S.rebooked = false; S.jam = false; S.jamKnown = false; } },
+  { s:'metro', t:'Metro ticket in the app', d:'QR ticket, live stations, last-mile auto waiting', f:() => { S.rebooked = false; S.late = false; S.jam = false; S.jamKnown = false; } },
+  { s:'summary', t:'Fare and "same ride tomorrow?"', d:'Fare breakdown, rating, yes or no for tomorrow', f:() => { S.rebooked = false; S.late = false; S.jam = false; S.jamKnown = false; S.tomorrow = null; } },
   { g:'When things go wrong', id:'late', s:'metro', t:'Last-mile auto runs late', d:'You are told early and that leg becomes free', f:() => { resetMorning(); S.late = true; } },
+  { id:'jam', s:'ride', t:'Traffic makes you miss the train', d:'Saathi re-plans the next train and last-mile auto, and the late leg is free', f:() => { resetMorning(); S.jam = true; } },
   { id:'snooze', s:'alarm', t:'Snooze too long', d:'Tap "Snooze again": Saathi moves you to the next auto', f:() => { resetMorning(); S.snoozes = 1; } },
   { g:'Night', s:'evening', t:'Ride home at night', d:'Women-only sharing, live trip for an emergency contact, drop at your gate', f:() => { resetMorning(); S.phase = 'mon'; S.tripDone = true; } },
   { g:'Driver app', s:'dhome', t:"Today's route and riders", d:'Departures timed to trains, riders booked, battery, earnings', f:() => {} },
@@ -1095,13 +1131,13 @@ function sceneIndex(){
   if(sc === 'setup1' || sc === 'setup2') return 0;
   if(sc === 'plan') return 1;
   if(sc === 'home') return S.phase === 'sun' ? 2 : -1;
-  if(sc === 'lock' || sc === 'alarm') return S.snoozes > 0 || S.rebooked ? 9 : 3;
-  if(sc === 'live' || sc === 'ride') return S.rebooked ? 9 : sc === 'live' ? 4 : 5;
-  if(sc === 'metro' || sc === 'lastmile') return S.late ? 8 : 6;
-  if(sc === 'summary') return S.late ? 8 : 7;
-  if(sc === 'evening' || sc === 'night') return 10;
-  if(sc === 'dhome' || sc === 'dearn') return 11;
-  if(sc === 'ddep') return 12;
+  if(sc === 'lock' || sc === 'alarm') return S.snoozes > 0 || S.rebooked ? 10 : 3;
+  if(sc === 'live' || sc === 'ride') return S.rebooked ? 10 : (sc === 'ride' && S.jam) ? 9 : sc === 'live' ? 4 : 5;
+  if(sc === 'metro' || sc === 'lastmile') return S.late ? 8 : S.jam ? 9 : 6;
+  if(sc === 'summary') return S.late ? 8 : S.jam ? 9 : 7;
+  if(sc === 'evening' || sc === 'night') return 11;
+  if(sc === 'dhome' || sc === 'dearn') return 12;
+  if(sc === 'ddep') return 13;
   return -1;
 }
 function renderGuide(){
@@ -1113,7 +1149,7 @@ function renderGuide(){
     if(sc.g) html += (i ? '</div>' : '') + `<h2>${sc.g}</h2><div class="scenes">`;
     html += `<button data-gscene="${i}" class="${i === cur ? 'on' : ''}"><span class="n">${i + 1}</span><span>${sc.t}<small>${sc.d}</small></span></button>`;
   });
-  html += `</div><div class="g-note"><b>Works for real:</b> every button and toggle, timers, moving maps, snooze and re-booking, the free leg when an auto is late, ratings, "same ride tomorrow" and the driver's code check. <b>Simulated:</b> payments, GPS, notifications, the metro QR, names and numbers.</div>
+  html += `</div><div class="g-note"><b>Works for real:</b> every button and toggle, timers, moving maps, snooze and re-booking, re-planning after a traffic jam, the free leg when an auto is late, ratings, "same ride tomorrow" and the driver's code check. <b>Simulated:</b> payments, GPS, notifications, the metro QR, names and numbers.</div>
   <div class="g-credit">Concept prototype by Shivangi Pandita for the Ola Electric APM assignment. Not an Ola product.</div>
   <button class="g-restart" data-grestart="1">Restart from the beginning</button>`;
   $('#guide').innerHTML = html; $('#guideM').innerHTML = html;
