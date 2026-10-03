@@ -561,9 +561,9 @@ screens.setup2 = { time:() => '9:11', html:() => `<div class="page">
   <div class="top"><button class="back" aria-label="Back" data-go="setup1">${I.back}</button><h2>Safety and alerts</h2><span class="stepn">2 of 3</span></div>
   <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
   <div class="card">
-    <div class="pref"><div class="t"><b>Share rides only with women</b><span>You are matched only with verified women co-riders. Saathi never shows anyone how many women are in a vehicle.</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
+    <div class="pref"><div class="t"><b>Share rides only with women</b><span>Offered only to women riders whose ID is verified, so a man cannot turn it on. Saathi never shows anyone how many women are in a vehicle.</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
     <div class="pref"><div class="t"><b>Alarm when it's time to leave</b><span>Rings 5 minutes before your Saathi reaches you, based on where it actually is.</span></div><button data-act="pref" data-k="alarm" aria-label="Leave-now alarm">${tog(S.prefs.alarm)}</button></div>
-    <div class="pref"><div class="t"><b>Share every trip with Maa</b><span>+91 98xxx x4521 gets a live link each time you ride.</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
+    <div class="pref"><div class="t"><b>Share trips with a family member or emergency contact</b><span>The person you choose gets a live link each time you ride, and an alert if you press SOS.</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
   </div>
   ${banner('blue', I.shield, 'On every ride', 'Police-verified, trained drivers. Live tracking, an SOS button and masked phone numbers.')}
   <button class="btn" data-go="plan">See my plan</button>
@@ -614,7 +614,7 @@ function homeSun(){
 function homeMon(){
   const d = cday(), diff = minsVsTarget();
   let top;
-  if(S.nightDone) top = `<div class="card row"><span class="ic-ok">${I.check}</span><div><b>Home at ${E(48)}</b><div class="small muted">${S.prefs.share ? 'We told Maa you reached home.' : 'Have a good night.'}</div></div></div>`;
+  if(S.nightDone) top = `<div class="card row"><span class="ic-ok">${I.check}</span><div><b>Home at ${E(48)}</b><div class="small muted">${S.prefs.share ? 'We told your emergency contact you reached home.' : 'Have a good night.'}</div></div></div>`;
   else if(S.todaySkipped) top = `<div class="card"><b>You skipped today's commute</b><div class="small muted mt4">Your seats went to other riders. No charge.</div></div>` + eveCard();
   else top = `<div class="card row">${diff <= 0 ? `<span class="ic-ok">${I.check}</span>` : `<span class="ic-late">${I.clock}</span>`}<div><b>Reached office at ${TR(arrBase())}</b><div class="small muted">${diff <= 0 ? 'On time, ' + (-diff) + ' min early' : diff + ' min late' + (S.late ? '. The late leg was free.' : '')}</div></div></div>` + eveCard();
   return `<div class="page">
@@ -701,7 +701,7 @@ screens.ride = { time:() => tr(518), html:() => `<div class="page">
   <div class="card">
     <div class="seats" id="seats">${seat('in', 'Seat 1', 'On board')}${seat('me', 'Seat 2', 'You')}${seat('wait', 'Seat 3', 'Rawalpada')}</div>
     <div class="row wrap mt10">${coRiders()}</div>
-    ${S.prefs.share ? `<div class="row g6 small muted mt8">${I.share} Maa can see this trip live</div>` : ''}
+    ${S.prefs.share ? `<div class="row g6 small muted mt8">${I.share} Your emergency contact can see this trip live</div>` : ''}
     <div class="btns mt12"><button class="btn sm ghost" data-act="shareTrip">${I.share} Share</button><button class="btn sm red" data-act="sos">SOS</button></div>
   </div>
   <button class="btn sticky hidden" id="toMetro" data-go="metro">Open my metro ticket</button>
@@ -803,7 +803,7 @@ screens.evening = { time:() => hm(1255 + eveShift()), html:() => `<div class="pa
   </div>
   <div class="card">
     <div class="pref np"><div class="t"><b>Women-only ride</b><span>Only verified women co-riders on both Saathi legs</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only ride">${tog(S.prefs.womenOnly)}</button></div>
-    <div class="pref"><div class="t"><b>Share live trip with Maa</b><span>She can see where you are until you reach home</span></div><button data-act="pref" data-k="share" aria-label="Share trip">${tog(S.prefs.share)}</button></div>
+    <div class="pref"><div class="t"><b>Share live trip with your emergency contact</b><span>They can see where you are until you reach home</span></div><button data-act="pref" data-k="share" aria-label="Share trip">${tog(S.prefs.share)}</button></div>
   </div>
   <button class="btn" data-act="startNight">I'm leaving now</button>
 </div>` };
@@ -815,7 +815,7 @@ function nightEnd(){
 screens.night = { time:() => hm(1299 + eveShift()), html:() => `<div class="page">
   <div class="top"><h2 id="nightTitle">Almost home</h2>${S.prefs.womenOnly ? `<span class="chip green ml-auto">${I.shield} Women-only</span>` : ''}</div>
   <div class="mapbox">${mapSVG('night')}<div class="eta"><b id="eta">${hm(1308 + eveShift())}</b><span>at your gate</span></div></div>
-  <div id="nightBanner">${S.prefs.share ? banner('blue', I.share, 'Maa is following your trip live', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`) : banner('green', I.check, 'On your way home', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`)}</div>
+  <div id="nightBanner">${S.prefs.share ? banner('blue', I.share, 'Your emergency contact is following your trip live', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`) : banner('green', I.check, 'On your way home', `You reached Dahisar (E) at ${E(37)} and your Saathi was waiting at Gate 1.`)}</div>
   <div class="card">
     <div class="row"><div class="avatar">RM</div><div class="grow"><b>Rakesh More</b> <span class="small muted">· 4.8 ★ · police verified</span><div class="small muted">Electric auto · MH 47 AS 0912 · Route R12</div></div></div>
     <div class="seats">${seat('in', 'Seat 1', 'Drops first')}${seat('me', 'Seat 2', 'You')}${seat('in', 'Seat 3', 'Drops last')}</div>
@@ -829,7 +829,7 @@ screens.night = { time:() => hm(1299 + eveShift()), html:() => `<div class="page
     S.nightArrived = true;
     $('#nightTitle').textContent = "You're home";
     $('#eta').textContent = 'Home';
-    setBanner('nightBanner', 'green', I.check, `Home at ${E(48)}`, S.prefs.share ? 'We told Maa you reached home safely.' : 'Have a good night.');
+    setBanner('nightBanner', 'green', I.check, `Home at ${E(48)}`, S.prefs.share ? 'We told your emergency contact you reached home safely.' : 'Have a good night.');
     $('#nightEnd').innerHTML = nightEnd();
   });
 } };
@@ -857,16 +857,16 @@ screens.pass = { tab:'pass', time:() => tabTime(), html:() => S.pay === 'pass' ?
 </div>` };
 
 screens.profile = { tab:'profile', time:() => tabTime(), html:() => `<div class="page">
-  <div class="row prof"><div class="avatar lg">PS</div><div><b class="pn">Priya Sharma</b><div class="small muted">Dahisar East, Mumbai</div></div></div>
+  <div class="row prof"><div class="avatar lg">PS</div><div><b class="pn">Priya Sharma</b><div class="small muted">Dahisar East, Mumbai · ID verified</div></div></div>
   <div class="card"><div class="row between"><b>My commute</b><button class="chip" data-go="setup1">Edit</button></div>
     <div class="kv mt4"><span>Home</span><b class="r">${esc(firstPart(S.prefs.home))}</b></div>
     <div class="kv"><span>Work</span><b class="r">${esc(firstPart(S.prefs.work))}</b></div>
     <div class="kv"><span>Reach by</span><b>${S.prefs.arrive} am</b></div>
     <div class="kv"><span>Days</span><b class="r">${daysLabel()}</b></div></div>
   <div class="card">
-    <div class="pref np"><div class="t"><b>Women-only rides</b><span>Match me only with verified women co-riders</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
+    <div class="pref np"><div class="t"><b>Women-only rides</b><span>Available because your ID shows you are a woman. Match me only with verified women co-riders</span></div><button data-act="pref" data-k="womenOnly" aria-label="Women-only rides">${tog(S.prefs.womenOnly)}</button></div>
     <div class="pref"><div class="t"><b>Leave-now alarm</b><span>Rings 5 minutes before my Saathi reaches me</span></div><button data-act="pref" data-k="alarm" aria-label="Leave-now alarm">${tog(S.prefs.alarm)}</button></div>
-    <div class="pref"><div class="t"><b>Trusted contact</b><span>Maa, +91 98xxx x4521, sees every trip live</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
+    <div class="pref"><div class="t"><b>Emergency contact</b><span>A family member, +91 98xxx x4521, sees every trip live</span></div><button data-act="pref" data-k="share" aria-label="Share trips">${tog(S.prefs.share)}</button></div>
   </div>
   <button class="card demo" data-act="driverMode"><span class="pill-demo">Demo</span><span class="dm"><b>Switch to the driver app</b><span>See Santosh's route, riders and codes</span></span></button>
 </div>` };
@@ -1006,9 +1006,9 @@ const A = {
   leaving(){ go('live'); },
   skipToday(){ sheet(`<b class="sh-title">Skip today's commute?</b><p class="muted small" style="margin-bottom:14px">Your seats go to other riders. No charge.</p><button class="btn" data-act="confirmSkipToday">Skip today</button><button class="btn ghost" data-act="closeSheet">Go back</button>`); },
   confirmSkipToday(){ S.todaySkipped = true; S.phase = 'mon'; go('home'); toast('Today skipped. No charge.'); },
-  shareTrip(){ toast('Live trip link sent to Maa on WhatsApp.'); },
+  shareTrip(){ toast('Live trip link sent to your emergency contact.'); },
   call(){ toast('Calling through a masked number. Neither of you sees the other\'s phone number.'); },
-  sos(){ sheet(`<b class="sh-title" style="color:var(--red)">Send SOS?</b><p class="muted small" style="margin-bottom:14px">The Saathi safety team and Maa get your live location, and the team calls you within 30 seconds.</p><button class="btn red" data-act="sosConfirm">Send SOS</button><button class="btn ghost" data-act="closeSheet">Cancel</button>`); },
+  sos(){ sheet(`<b class="sh-title" style="color:var(--red)">Send SOS?</b><p class="muted small" style="margin-bottom:14px">The Saathi safety team and your emergency contact get your live location, and the team calls you within 30 seconds.</p><button class="btn red" data-act="sosConfirm">Send SOS</button><button class="btn ghost" data-act="closeSheet">Cancel</button>`); },
   sosConfirm(){ closeSheet(); toast('Demo only: no alert was sent. In the real app the safety team calls you within 30 seconds.', 3800); },
   boarded(){ go('ride'); },
   lateToggle(){ S.late = !S.late; $('#lmCard').innerHTML = lmCard(); if(S.late) toast('Saathi alert: your last-mile auto is running 7 minutes late. That leg is now free.', 3600); },
@@ -1086,7 +1086,7 @@ const SCENES = [
   { s:'summary', t:'Fare and "same ride tomorrow?"', d:'Fare breakdown, rating, yes or no for tomorrow', f:() => { S.rebooked = false; S.late = false; S.tomorrow = null; } },
   { g:'When things go wrong', id:'late', s:'metro', t:'Last-mile auto runs late', d:'You are told early and that leg becomes free', f:() => { resetMorning(); S.late = true; } },
   { id:'snooze', s:'alarm', t:'Snooze too long', d:'Tap "Snooze again": Saathi moves you to the next auto', f:() => { resetMorning(); S.snoozes = 1; } },
-  { g:'Night', s:'evening', t:'Ride home at night', d:'Women-only sharing, live trip for family, drop at your gate', f:() => { resetMorning(); S.phase = 'mon'; S.tripDone = true; } },
+  { g:'Night', s:'evening', t:'Ride home at night', d:'Women-only sharing, live trip for an emergency contact, drop at your gate', f:() => { resetMorning(); S.phase = 'mon'; S.tripDone = true; } },
   { g:'Driver app', s:'dhome', t:"Today's route and riders", d:'Departures timed to trains, riders booked, battery, earnings', f:() => {} },
   { s:'ddep', t:'Pick-ups and boarding codes', d:"Type the rider's code, handle a no-show, start the trip", f:() => { S.d = S0().d; } }
 ];
